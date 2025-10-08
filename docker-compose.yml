@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # ========== BASE DE DONNÉES MYSQL ==========
+  mysql:
+    image: mysql:8.3
+    container_name: hopital_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: clinique_db
+      MYSQL_USER: clinique_user
+      MYSQL_PASSWORD: clinique_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - hopital_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ========== PHPMYADMIN (Interface Web) ==========
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: hopital_phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root123
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+    networks:
+      - hopital_network
+
+# ========== VOLUMES (Persistance des données) ==========
+volumes:
+  mysql_data:
+    driver: local
+
+# ========== RÉSEAUX ==========
+networks:
+  hopital_network:
+    driver: bridge
