@@ -50,9 +50,9 @@ public final class ValidationUtil {
     /**
      * Valide un numéro de téléphone marocain
      */
-    public static boolean isValidPhone(String phone) {
-        return phone != null && PHONE_PATTERN.matcher(phone).matches();
-    }
+//    public static boolean isValidPhone(String phone) {
+//        return phone != null && PHONE_PATTERN.matcher(phone).matches();
+//    }
 
     /**
      * Valide un nom (au moins 2 caractères, lettres uniquement)
