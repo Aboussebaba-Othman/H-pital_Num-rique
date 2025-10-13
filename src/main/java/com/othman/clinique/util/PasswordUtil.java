@@ -55,15 +55,15 @@ public final class PasswordUtil {
             return "Le mot de passe doit contenir au moins 8 caractères";
         }
 
-        if (password.chars().anyMatch(Character::isUpperCase)) {
+        if (password.chars().noneMatch(Character::isUpperCase)) {
             return "Le mot de passe doit contenir au moins une majuscule";
         }
 
-        if (password.chars().anyMatch(Character::isLowerCase)) {
+        if (password.chars().noneMatch(Character::isLowerCase)) {
             return "Le mot de passe doit contenir au moins une minuscule";
         }
 
-        if (password.chars().anyMatch(Character::isDigit)) {
+        if (password.chars().noneMatch(Character::isDigit)) {
             return "Le mot de passe doit contenir au moins un chiffre";
         }
 
