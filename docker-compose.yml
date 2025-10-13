@@ -1,7 +1,5 @@
-version: '3.8'
-
 services:
-  # ========== BASE DE DONNÉES MYSQL ==========
+  # ========== MYSQL ==========
   mysql:
     image: mysql:8.3
     container_name: hopital_mysql
@@ -24,7 +22,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # ========== PHPMYADMIN (Interface Web) ==========
+  # ========== PHPMYADMIN ==========
   phpmyadmin:
     image: phpmyadmin:latest
     container_name: hopital_phpmyadmin
@@ -41,12 +39,24 @@ services:
     networks:
       - hopital_network
 
-# ========== VOLUMES (Persistance des données) ==========
+  # ========== TOMCAT ==========
+  tomcat:
+    image: tomcat:10-jdk17
+    container_name: hopital_tomcat
+    restart: always
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./target/hopital-numerique.war:/usr/local/tomcat/webapps/hopital-numerique.war
+    depends_on:
+      - mysql
+    networks:
+      - hopital_network
+
 volumes:
   mysql_data:
     driver: local
 
-# ========== RÉSEAUX ==========
 networks:
   hopital_network:
     driver: bridge

@@ -14,13 +14,6 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Dashboard Administrateur
- * Affiche les statistiques globales de la clinique
- *
- * @author Othman
- * @version 1.0
- */
 @WebServlet(name = "AdminDashboardServlet", urlPatterns = {"/admin/dashboard"})
 public class AdminDashboardServlet extends HttpServlet {
 
@@ -55,17 +48,14 @@ public class AdminDashboardServlet extends HttpServlet {
         }
 
         try {
-            // Récupérer les statistiques globales
             Long nombrePatients = patientService.countPatients();
             Long nombreDocteurs = docteurService.countDocteurs();
             Long nombreDepartements = departementService.countDepartements();
             Long nombreSalles = salleService.countSalles();
 
-            // Consultations du jour
             java.time.LocalDate aujourdhui = java.time.LocalDate.now();
             int consultationsDuJour = consultationService.getConsultationsByDate(aujourdhui).size();
 
-            // Statistiques par statut
             int consultationsReservees = consultationService.getConsultationsByStatut(
                     com.othman.clinique.model.StatutConsultation.RESERVEE).size();
             int consultationsValidees = consultationService.getConsultationsByStatut(
