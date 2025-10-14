@@ -110,20 +110,14 @@ public class DocteurRepository implements IDocteurRepository {
     @Override
     public List<Docteur> search(String searchTerm) {
         EntityManager em = JPAUtil.getEntityManager();
+        String jpql = "SELECT d FROM Docteur d WHERE " +
+                "LOWER(d.nom) LIKE LOWER(:search) OR " +
+                "LOWER(d.prenom) LIKE LOWER(:search) OR " +
+                "LOWER(d.email) LIKE LOWER(:search)";
 
-        try {
-            return em.createQuery(
-                            "SELECT d FROM Docteur d WHERE " +
-                                    "LOWER(d.nom) LIKE LOWER(:search) OR " +
-                                    "LOWER(d.prenom) LIKE LOWER(:search) OR " +
-                                    "LOWER(d.specialite) LIKE LOWER(:search)",
-                            Docteur.class
-                    )
-                    .setParameter("search", "%" + searchTerm + "%")
-                    .getResultList();
-        } finally {
-            JPAUtil.close(em);
-        }
+        TypedQuery<Docteur> query = em.createQuery(jpql, Docteur.class);
+        query.setParameter("search", "%" + searchTerm + "%");
+        return query.getResultList();
     }
 
 

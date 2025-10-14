@@ -10,11 +10,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-gray-50">
+<body>
 
+<!-- Définir la page active pour la sidebar -->
+<c:set var="pageParam" value="salles" scope="request"/>
+
+<!-- Inclure la sidebar -->
 <%@ include file="../common/admin-nav.jsp" %>
-
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
     <!-- Header -->
     <div class="flex justify-between items-center mb-8">
@@ -223,6 +225,9 @@
         if (e.target === this) closeModal();
     });
 </script>
+
+</main>
+</div>
 
 </body>
 </html>

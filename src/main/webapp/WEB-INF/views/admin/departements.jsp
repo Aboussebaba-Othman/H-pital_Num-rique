@@ -9,106 +9,108 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-*<body class="bg-gray-50">
+*<body>
 
+<!-- Définir la page active pour la sidebar -->
+<c:set var="pageParam" value="departements" scope="request"/>
+
+<!-- Inclure la sidebar -->
 <%@ include file="../common/admin-nav.jsp" %>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<!-- Header -->
+<div class="flex justify-between items-center mb-8">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900">Gestion des Départements</h1>
+        <p class="text-gray-600 mt-1">Créer, modifier ou supprimer des départements médicaux</p>
+    </div>
+    <button onclick="openCreateModal()"
+            class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition shadow-lg">
+        <i class="fas fa-plus mr-2"></i>
+        Nouveau Département
+    </button>
+</div>
 
-    <!-- Header -->
-    <div class="flex justify-between items-center mb-8">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-900">Gestion des Départements</h1>
-            <p class="text-gray-600 mt-1">Créer, modifier ou supprimer des départements médicaux</p>
-        </div>
-        <button onclick="openCreateModal()"
-                class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition shadow-lg">
-            <i class="fas fa-plus mr-2"></i>
-            Nouveau Département
-        </button>
+<!-- Messages -->
+<c:if test="${param.success != null}">
+    <div class="mb-6 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded">
+        <i class="fas fa-check-circle mr-2"></i>
+            ${param.success}
+    </div>
+</c:if>
+
+<c:if test="${param.error != null}">
+    <div class="mb-6 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded">
+        <i class="fas fa-exclamation-triangle mr-2"></i>
+            ${param.error}
+    </div>
+</c:if>
+
+<!-- Liste des départements -->
+<div class="bg-white rounded-xl shadow-lg overflow-hidden">
+    <div class="p-6 border-b border-gray-200">
+        <h2 class="text-xl font-bold text-gray-900">
+            <i class="fas fa-list mr-2 text-purple-600"></i>
+            Liste des Départements (${departements.size()})
+        </h2>
     </div>
 
-    <!-- Messages -->
-    <c:if test="${param.success != null}">
-        <div class="mb-6 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded">
-            <i class="fas fa-check-circle mr-2"></i>
-                ${param.success}
-        </div>
-    </c:if>
-
-    <c:if test="${param.error != null}">
-        <div class="mb-6 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded">
-            <i class="fas fa-exclamation-triangle mr-2"></i>
-                ${param.error}
-        </div>
-    </c:if>
-
-    <!-- Liste des départements -->
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div class="p-6 border-b border-gray-200">
-            <h2 class="text-xl font-bold text-gray-900">
-                <i class="fas fa-list mr-2 text-purple-600"></i>
-                Liste des Départements (${departements.size()})
-            </h2>
-        </div>
-
-        <c:choose>
-            <c:when test="${empty departements}">
-                <div class="p-12 text-center">
-                    <i class="fas fa-building text-gray-300 text-6xl mb-4"></i>
-                    <p class="text-gray-500 text-lg">Aucun département enregistré</p>
-                    <button onclick="openCreateModal()"
-                            class="mt-4 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
-                        Créer le premier département
-                    </button>
-                </div>
-            </c:when>
-            <c:otherwise>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nom du Département</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre de Docteurs</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
-                        </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                        <c:forEach var="dept" items="${departements}">
-                            <tr class="hover:bg-gray-50 transition">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0 h-10 w-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                                            <i class="fas fa-building text-purple-600"></i>
-                                        </div>
-                                        <div class="ml-4">
-                                            <div class="text-sm font-medium text-gray-900">${dept.nom}</div>
-                                        </div>
+    <c:choose>
+        <c:when test="${empty departements}">
+            <div class="p-12 text-center">
+                <i class="fas fa-building text-gray-300 text-6xl mb-4"></i>
+                <p class="text-gray-500 text-lg">Aucun département enregistré</p>
+                <button onclick="openCreateModal()"
+                        class="mt-4 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                    Créer le premier département
+                </button>
+            </div>
+        </c:when>
+        <c:otherwise>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nom du Département</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre de Docteurs</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                    <c:forEach var="dept" items="${departements}">
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-building text-purple-600"></i>
                                     </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900">${dept.nom}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                                         ${docteursCount[dept.idDepartement]} docteur(s)
                                     </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <button onclick='editDepartement(${dept.idDepartement}, "${dept.nom}")'
-                                            class="text-blue-600 hover:text-blue-900 mr-4">
-                                        <i class="fas fa-edit"></i> Modifier
-                                    </button>
-                                    <button onclick="confirmDelete(${dept.idDepartement}, '${dept.nom}')"
-                                            class="text-red-600 hover:text-red-900">
-                                        <i class="fas fa-trash"></i> Supprimer
-                                    </button>
-                                </td>
-                            </tr>
-                        </c:forEach>
-                        </tbody>
-                    </table>
-                </div>
-            </c:otherwise>
-        </c:choose>
-    </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <button onclick='editDepartement(${dept.idDepartement}, "${dept.nom}")'
+                                        class="text-blue-600 hover:text-blue-900 mr-4">
+                                    <i class="fas fa-edit"></i> Modifier
+                                </button>
+                                <button onclick="confirmDelete(${dept.idDepartement}, '${dept.nom}')"
+                                        class="text-red-600 hover:text-red-900">
+                                    <i class="fas fa-trash"></i> Supprimer
+                                </button>
+                            </td>
+                        </tr>
+                    </c:forEach>
+                    </tbody>
+                </table>
+            </div>
+        </c:otherwise>
+    </c:choose>
+</div>
 
 </div>
 
@@ -198,6 +200,9 @@
         if (e.target === this) closeModal();
     });
 </script>
+
+</main>
+</div>
 
 </body>
 </html>

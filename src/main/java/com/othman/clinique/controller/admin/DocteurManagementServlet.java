@@ -7,7 +7,6 @@ import com.othman.clinique.model.Departement;
 import com.othman.clinique.model.Docteur;
 import com.othman.clinique.service.DepartementService;
 import com.othman.clinique.service.DocteurService;
-import com.othman.clinique.service.AuthenticationService;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -63,7 +62,6 @@ public class DocteurManagementServlet extends HttpServlet {
         List<Docteur> docteurs = docteurService.getAllDocteurs();
         List<Departement> departements = departementService.getAllDepartements();
 
-        // Calculer statistiques pour chaque docteur
         for (Docteur docteur : docteurs) {
             Docteur withPlanning = docteurService.getDocteurWithPlanning(docteur.getIdDocteur());
             int consultationsFutures = docteurService.getConsultationsFutures(docteur.getIdDocteur()).size();
@@ -84,18 +82,41 @@ public class DocteurManagementServlet extends HttpServlet {
 
         String searchTerm = request.getParameter("search");
         String specialite = request.getParameter("specialite");
-        String departementId = request.getParameter("departementId");
+        String departementIdStr = request.getParameter("departementId");
 
         List<Docteur> docteurs;
 
-        if (departementId != null && !departementId.isEmpty()) {
-            docteurs = docteurService.getDocteursByDepartement(Long.parseLong(departementId));
-        } else if (specialite != null && !specialite.isEmpty()) {
+        if (departementIdStr != null && !departementIdStr.trim().isEmpty()) {
+            try {
+                Long departementId = Long.parseLong(departementIdStr);
+                docteurs = docteurService.getDocteursByDepartement(departementId);
+                LOGGER.info("Recherche par département: " + departementId + " - " + docteurs.size() + " résultats");
+            } catch (NumberFormatException e) {
+                LOGGER.warning("Format de département invalide: " + departementIdStr);
+                docteurs = docteurService.getAllDocteurs();
+            }
+        }
+        else if (specialite != null && !specialite.trim().isEmpty()) {
             docteurs = docteurService.getDocteursBySpecialite(specialite);
-        } else if (searchTerm != null && !searchTerm.isEmpty()) {
+            LOGGER.info("Recherche par spécialité: " + specialite + " - " + docteurs.size() + " résultats");
+        }
+        else if (searchTerm != null && !searchTerm.trim().isEmpty()) {
             docteurs = docteurService.searchDocteurs(searchTerm);
-        } else {
+            LOGGER.info("Recherche par terme: " + searchTerm + " - " + docteurs.size() + " résultats");
+        }
+        else {
             docteurs = docteurService.getAllDocteurs();
+            LOGGER.info("Aucun filtre - Affichage de tous les docteurs: " + docteurs.size());
+        }
+
+        for (Docteur docteur : docteurs) {
+            try {
+                Docteur withPlanning = docteurService.getDocteurWithPlanning(docteur.getIdDocteur());
+                docteur.setPlanning(withPlanning.getPlanning());
+            } catch (Exception e) {
+                LOGGER.warning("Erreur chargement planning docteur " + docteur.getIdDocteur());
+                docteur.setPlanning(new java.util.ArrayList<>());
+            }
         }
 
         List<Departement> departements = departementService.getAllDepartements();
@@ -103,6 +124,8 @@ public class DocteurManagementServlet extends HttpServlet {
         request.setAttribute("docteurs", docteurs);
         request.setAttribute("departements", departements);
         request.setAttribute("searchTerm", searchTerm);
+
+        LOGGER.info("Forwarding vers JSP avec " + docteurs.size() + " docteur(s)");
 
         request.getRequestDispatcher("/WEB-INF/views/admin/docteurs.jsp")
                 .forward(request, response);
@@ -155,8 +178,8 @@ public class DocteurManagementServlet extends HttpServlet {
         String specialite = request.getParameter("specialite");
         Long departementId = Long.parseLong(request.getParameter("departementId"));
 
-        // Utiliser AuthenticationService pour créer le docteur
-        AuthenticationService authService = new AuthenticationService();
+        com.othman.clinique.service.AuthenticationService authService =
+                new com.othman.clinique.service.AuthenticationService();
 
         authService.registerDocteur(nom, prenom, email, password, specialite, departementId);
 
