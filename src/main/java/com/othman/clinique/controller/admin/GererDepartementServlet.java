@@ -13,16 +13,12 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Servlet de gestion des départements (CRUD complet)
- *
- * @author Othman
- * @version 1.0
- */
 @WebServlet(name = "GererDepartementServlet", urlPatterns = {"/admin/departements"})
 public class GererDepartementServlet extends HttpServlet {
 
@@ -36,24 +32,22 @@ public class GererDepartementServlet extends HttpServlet {
         LOGGER.info("GererDepartementServlet initialisé");
     }
 
-    /**
-     * GET : Affiche la liste des départements
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         try {
-            // Récupérer tous les départements
             List<Departement> departements = departementService.getAllDepartements();
 
-            // Calculer le nombre de docteurs pour chaque département
+            Map<Long, Integer> docteursCount = new HashMap<>();
+
             for (Departement dept : departements) {
                 int nbDocteurs = departementService.countDocteursInDepartement(dept.getIdDepartement());
-                dept.setDocteurs(new java.util.ArrayList<>()); // Initialiser pour éviter lazy loading
+                docteursCount.put(dept.getIdDepartement(), nbDocteurs);
             }
 
             request.setAttribute("departements", departements);
+            request.setAttribute("docteursCount", docteursCount);
 
             LOGGER.info("Liste des départements chargée: " + departements.size() + " département(s)");
 
@@ -68,9 +62,6 @@ public class GererDepartementServlet extends HttpServlet {
         }
     }
 
-    /**
-     * POST : Traite les actions CRUD (create, update, delete)
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -106,9 +97,6 @@ public class GererDepartementServlet extends HttpServlet {
         }
     }
 
-    /**
-     * Créer un nouveau département
-     */
     private void createDepartement(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
@@ -120,9 +108,6 @@ public class GererDepartementServlet extends HttpServlet {
         redirectWithSuccess(request, response, "Département créé avec succès");
     }
 
-    /**
-     * Mettre à jour un département
-     */
     private void updateDepartement(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
@@ -135,9 +120,6 @@ public class GererDepartementServlet extends HttpServlet {
         redirectWithSuccess(request, response, "Département modifié avec succès");
     }
 
-    /**
-     * Supprimer un département
-     */
     private void deleteDepartement(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
@@ -149,18 +131,12 @@ public class GererDepartementServlet extends HttpServlet {
         redirectWithSuccess(request, response, "Département supprimé avec succès");
     }
 
-    /**
-     * Redirection avec message de succès
-     */
     private void redirectWithSuccess(HttpServletRequest request, HttpServletResponse response, String message)
             throws IOException {
         response.sendRedirect(request.getContextPath() + "/admin/departements?success=" +
                 URLEncoder.encode(message, "UTF-8"));
     }
 
-    /**
-     * Redirection avec message d'erreur
-     */
     private void redirectWithError(HttpServletRequest request, HttpServletResponse response, String message)
             throws IOException {
         response.sendRedirect(request.getContextPath() + "/admin/departements?error=" +
