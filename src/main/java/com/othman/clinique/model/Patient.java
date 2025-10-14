@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
-
 @Entity
 @Table(name = "patient")
 public class Patient extends Personne {
@@ -14,6 +13,9 @@ public class Patient extends Personne {
 
     @Column(name = "taille")
     private Double taille;
+
+    @Transient
+    private Double imc;
 
     @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Consultation> consultations = new ArrayList<>();
@@ -48,6 +50,33 @@ public class Patient extends Personne {
         this.taille = taille;
     }
 
+    public Double getImc() {
+        return imc;
+    }
+
+    public void setImc(Double imc) {
+        this.imc = imc;
+    }
+
+    public Double calculateImc() {
+        if (poids != null && taille != null && taille > 0) {
+            this.imc = Math.round((poids / (taille * taille)) * 10.0) / 10.0;
+            return this.imc;
+        }
+        return null;
+    }
+
+    public String getImcCategory() {
+        if (imc == null) return "Non calculé";
+
+        if (imc < 18.5) return "Insuffisance pondérale";
+        if (imc < 25) return "Poids normal";
+        if (imc < 30) return "Surpoids";
+        if (imc < 35) return "Obésité modérée";
+        if (imc < 40) return "Obésité sévère";
+        return "Obésité morbide";
+    }
+
     public List<Consultation> getConsultations() {
         return consultations;
     }
@@ -75,6 +104,7 @@ public class Patient extends Personne {
                 ", email='" + email + '\'' +
                 ", poids=" + poids +
                 ", taille=" + taille +
+                ", imc=" + imc +
                 '}';
     }
 }
