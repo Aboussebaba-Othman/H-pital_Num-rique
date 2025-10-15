@@ -22,11 +22,6 @@
             <h1 class="text-3xl font-bold text-gray-900">Gestion des Patients</h1>
             <p class="text-gray-600 mt-1">Consulter et modifier les informations des patients</p>
         </div>
-        <a href="${pageContext.request.contextPath}/inscription-patient"
-           class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-lg">
-            <i class="fas fa-user-plus mr-2"></i>
-            Nouveau Patient
-        </a>
     </div>
 
     <!-- Messages -->
