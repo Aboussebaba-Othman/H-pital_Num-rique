@@ -52,6 +52,37 @@ public class SupervisionServlet extends HttpServlet {
         }
     }
 
+        @Override
+        protected void doPost(HttpServletRequest request, HttpServletResponse response)
+                        throws ServletException, IOException {
+
+                String action = request.getParameter("action");
+                String idParam = request.getParameter("consultationId");
+
+                try {
+                        Long consultationId = Long.parseLong(idParam);
+
+                        if ("annuler".equals(action)) {
+                                // Admin can cancel any consultation
+                                consultationService.annulerConsultation(consultationId, null, null);
+                                request.getSession().setAttribute("successMessage", "Consultation annulée avec succès");
+                        } else if ("terminer".equals(action)) {
+                                // Admin terminate
+                                String compteRendu = request.getParameter("compteRendu");
+                                // Assuming admin id is not required here; pass null
+                                consultationService.terminerConsultationByAdmin(consultationId, null, compteRendu);
+                                request.getSession().setAttribute("successMessage", "Consultation marquée comme terminée");
+                        }
+
+                        response.sendRedirect(request.getContextPath() + "/admin/consultations");
+
+                } catch (Exception e) {
+                        LOGGER.log(Level.SEVERE, "Erreur action supervision", e);
+                        request.getSession().setAttribute("errorMessage", e.getMessage() == null ? "Erreur système" : e.getMessage());
+                        response.sendRedirect(request.getContextPath() + "/admin/consultations");
+                }
+        }
+
     private void listAllConsultations(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 

@@ -14,12 +14,14 @@ public class AdministrateurRepositoryImpl implements IAdministrateurRepository {
     public Optional<Administrateur> findByEmail(String email) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            return Optional.ofNullable(
-                    em.createQuery("SELECT a FROM Administrateur a WHERE a.email = :email", Administrateur.class)
-                            .setParameter("email", email)
-                            .getSingleResult()
-            );
-        } catch (NoResultException e) {
+            List<Administrateur> results = em.createQuery(
+                            "SELECT a FROM Administrateur a WHERE a.email = :email",
+                            Administrateur.class)
+                    .setParameter("email", email)
+                    .getResultList();
+
+            return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
+        } catch (Exception e) {
             return Optional.empty();
         } finally {
             JPAUtil.close(em);
@@ -128,5 +130,4 @@ public class AdministrateurRepositoryImpl implements IAdministrateurRepository {
     public boolean existsById(Long id) {
         return findById(id).isPresent();
     }
-
 }

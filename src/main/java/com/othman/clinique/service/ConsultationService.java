@@ -341,6 +341,55 @@ public class ConsultationService {
         }
     }
 
+    /**
+     * Permet à un administrateur de marquer une consultation comme terminée.
+     * Ne vérifie pas que l'administrateur soit le docteur assigné.
+     */
+    public Consultation terminerConsultationByAdmin(Long consultationId, Long adminId, String compteRendu) {
+        EntityManager em = null;
+        try {
+            em = JPAUtil.getEntityManager();
+            em.getTransaction().begin();
+
+            Consultation consultationManaged = em.find(Consultation.class, consultationId);
+            if (consultationManaged == null) {
+                em.getTransaction().rollback();
+                throw new EntityNotFoundException("Consultation", consultationId);
+            }
+
+            if (consultationManaged.getStatut() == StatutConsultation.ANNULEE
+                    || consultationManaged.getStatut() == StatutConsultation.TERMINEE) {
+                em.getTransaction().rollback();
+                throw new ValidationException("La consultation ne peut pas être marquée comme terminée");
+            }
+
+            consultationManaged.setStatut(StatutConsultation.TERMINEE);
+            consultationManaged.setCompteRendu(ValidationUtil.sanitize(compteRendu == null ? "Terminée par l\'administrateur" : compteRendu));
+
+            em.getTransaction().commit();
+
+            LOGGER.info("Consultation marquée TERMINEE par admin - ID: " + consultationId + ", Admin: " + adminId);
+            return consultationManaged;
+
+        } catch (ValidationException | EntityNotFoundException e) {
+            if (em != null && em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            LOGGER.warning("Échec terminaison admin: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            if (em != null && em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            LOGGER.log(Level.SEVERE, "Erreur lors de la terminaison admin", e);
+            throw new RuntimeException("Erreur système lors de la terminaison", e);
+        } finally {
+            if (em != null && em.isOpen()) {
+                em.close();
+            }
+        }
+    }
+
     // ==================== CONSULTATION ====================
 
     public Consultation getConsultationById(Long consultationId) {

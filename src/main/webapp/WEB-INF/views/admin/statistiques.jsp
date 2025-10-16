@@ -8,7 +8,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Statistiques - Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         tailwind.config = {
@@ -18,8 +17,7 @@
         }
     </script>
 
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
@@ -60,9 +58,9 @@
                 <div class="text-right">
                     <p class="text-sm text-gray-500">Dernière mise à jour</p>
                     <p class="text-sm font-semibold text-gray-900">
-                        <jsp:useBean id="now" class="java.util.Date"/>
-                        <fmt:formatDate value="${now}" pattern="dd/MM/yyyy HH:mm"/>
-                    </p>
+                            <jsp:useBean id="now" class="java.util.Date"/>
+                            <fmt:formatDate value="${now}" pattern="dd/MM/yyyy HH:mm"/>
+                        </p>
                 </div>
                 <button onclick="window.location.reload()"
                         class="px-4 py-2 bg-white rounded-lg shadow hover:shadow-md transition flex items-center space-x-2">
@@ -227,7 +225,7 @@
             </div>
             <div class="space-y-5">
                 <c:forEach var="entry" items="${topDocteurs}" varStatus="status">
-                    <div class="flex items-center slide-in" style="animation-delay: ${status.index * 0.1}s;">
+                    <div class="flex items-center slide-in" data-delay="${status.index * 0.1}">
                         <div class="relative">
                             <div class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-white shadow-md
                                 ${status.index == 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' :
@@ -252,8 +250,8 @@
                             <div class="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
                                 <c:set var="maxValue" value="${topDocteurs[0].value}"/>
                                 <c:set var="percentage" value="${(entry.value * 100.0) / maxValue}"/>
-                                <div class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-2.5 rounded-full transition-all duration-1000 shadow-sm"
-                                     style="width: ${percentage}%"></div>
+                          <div class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-2.5 rounded-full transition-all duration-1000 shadow-sm"
+                              data-percentage="${percentage}"></div>
                             </div>
                         </div>
                     </div>
@@ -276,8 +274,8 @@
             </div>
             <div class="space-y-3">
                 <c:forEach var="entry" items="${departementStats}" varStatus="status">
-                    <div class="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl hover:shadow-md transition-all slide-in"
-                         style="animation-delay: ${status.index * 0.1}s;">
+                <div class="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl hover:shadow-md transition-all slide-in"
+                    data-delay="${status.index * 0.1}">
                         <div class="flex items-center">
                             <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
                                 <i class="fas fa-hospital text-purple-600"></i>
@@ -511,281 +509,21 @@
 </body>
 </html>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
-    <!-- Header -->
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">
-            <i class="fas fa-chart-pie text-pink-600 mr-3"></i>
-            Statistiques et Rapports
-        </h1>
-        <p class="text-gray-600 mt-1">Vue d'ensemble des performances de la clinique</p>
-    </div>
-
-    <!-- Statistiques principales -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <!-- Total Patients -->
-        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <p class="text-blue-100 text-sm mb-1">Total Patients</p>
-                    <p class="text-4xl font-bold">${totalPatients}</p>
-                </div>
-                <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                    <i class="fas fa-users text-3xl"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Total Docteurs -->
-        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <p class="text-green-100 text-sm mb-1">Total Docteurs</p>
-                    <p class="text-4xl font-bold">${totalDocteurs}</p>
-                </div>
-                <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                    <i class="fas fa-user-md text-3xl"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Total Consultations -->
-        <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <p class="text-purple-100 text-sm mb-1">Total Consultations</p>
-                    <p class="text-4xl font-bold">${totalConsultations}</p>
-                </div>
-                <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                    <i class="fas fa-calendar-check text-3xl"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Taux d'annulation -->
-        <div class="bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg p-6 text-white">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <p class="text-red-100 text-sm mb-1">Taux d'Annulation</p>
-                    <p class="text-4xl font-bold">${tauxAnnulation}%</p>
-                </div>
-                <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                    <i class="fas fa-times-circle text-3xl"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Graphiques principaux -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-
-        <!-- Répartition des consultations par statut -->
-        <div class="bg-white rounded-xl shadow-lg p-6">
-            <h3 class="text-lg font-bold text-gray-900 mb-4">
-                <i class="fas fa-chart-pie text-pink-600 mr-2"></i>
-                Répartition par Statut
-            </h3>
-            <canvas id="statutChart" height="250"></canvas>
-        </div>
-
-        <!-- Consultations par mois -->
-        <div class="bg-white rounded-xl shadow-lg p-6">
-            <h3 class="text-lg font-bold text-gray-900 mb-4">
-                <i class="fas fa-chart-line text-indigo-600 mr-2"></i>
-                Évolution sur 6 Mois
-            </h3>
-            <canvas id="monthChart" height="250"></canvas>
-        </div>
-    </div>
-
-    <!-- Top 5 Docteurs -->
-    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-        <h3 class="text-xl font-bold text-gray-900 mb-6">
-            <i class="fas fa-trophy text-yellow-500 mr-2"></i>
-            Top 5 Docteurs (par nombre de consultations)
-        </h3>
-        <div class="space-y-4">
-            <c:forEach var="entry" items="${topDocteurs}" varStatus="status">
-                <div class="flex items-center">
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white
-                        ${status.index == 0 ? 'bg-yellow-500' :
-                          status.index == 1 ? 'bg-gray-400' :
-                          status.index == 2 ? 'bg-amber-600' : 'bg-blue-500'}">
-                            ${status.index + 1}
-                    </div>
-                    <div class="ml-4 flex-1">
-                        <div class="flex items-center justify-between">
-                            <span class="font-medium text-gray-900">${entry.key}</span>
-                            <span class="text-sm font-bold text-indigo-600">${entry.value} consultations</span>
-                        </div>
-                        <div class="mt-1 w-full bg-gray-200 rounded-full h-2">
-                            <c:set var="maxValue" value="${topDocteurs[0].value}"/>
-                            <c:set var="percentage" value="${(entry.value * 100.0) / maxValue}"/>
-                            <div class="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all duration-500"
-                                 style="width: ${percentage}%"></div>
-                        </div>
-                    </div>
-                </div>
-            </c:forEach>
-        </div>
-    </div>
-
-    <!-- Statistiques par département -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-
-        <!-- Départements -->
-        <div class="bg-white rounded-xl shadow-lg p-6">
-            <h3 class="text-xl font-bold text-gray-900 mb-6">
-                <i class="fas fa-building text-purple-600 mr-2"></i>
-                Docteurs par Département
-            </h3>
-            <div class="space-y-3">
-                <c:forEach var="entry" items="${departementStats}">
-                    <div class="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                        <span class="font-medium text-gray-900">${entry.key}</span>
-                        <span class="px-3 py-1 bg-purple-600 text-white rounded-full text-sm font-bold">
-                            ${entry.value} docteur(s)
-                        </span>
-                    </div>
-                </c:forEach>
-            </div>
-        </div>
-
-        <!-- Taux d'occupation salles -->
-        <div class="bg-white rounded-xl shadow-lg p-6">
-            <h3 class="text-xl font-bold text-gray-900 mb-6">
-                <i class="fas fa-door-open text-orange-600 mr-2"></i>
-                Occupation des Salles
-            </h3>
-            <div class="flex items-center justify-center h-48">
-                <div class="text-center">
-                    <div class="relative inline-flex items-center justify-center">
-                        <svg class="w-32 h-32">
-                            <circle cx="64" cy="64" r="56" fill="none" stroke="#e5e7eb" stroke-width="8"/>
-                            <circle cx="64" cy="64" r="56" fill="none" stroke="#f97316" stroke-width="8"
-                                    stroke-dasharray="${tauxOccupationMoyen * 3.52} 352"
-                                    stroke-linecap="round" transform="rotate(-90 64 64)"/>
-                        </svg>
-                        <div class="absolute">
-                            <p class="text-3xl font-bold text-gray-900">${tauxOccupationMoyen}%</p>
-                        </div>
-                    </div>
-                    <p class="mt-4 text-sm text-gray-600">Taux d'Occupation Moyen</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Résumé des consultations -->
-    <div class="bg-white rounded-xl shadow-lg p-6">
-        <h3 class="text-xl font-bold text-gray-900 mb-6">
-            <i class="fas fa-list-check text-indigo-600 mr-2"></i>
-            Résumé des Consultations
-        </h3>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div class="text-center p-4 bg-yellow-50 rounded-lg border-2 border-yellow-200">
-                <i class="fas fa-hourglass-half text-yellow-600 text-3xl mb-2"></i>
-                <p class="text-2xl font-bold text-gray-900">${reservees}</p>
-                <p class="text-sm text-gray-600">Réservées</p>
-            </div>
-            <div class="text-center p-4 bg-green-50 rounded-lg border-2 border-green-200">
-                <i class="fas fa-check-circle text-green-600 text-3xl mb-2"></i>
-                <p class="text-2xl font-bold text-gray-900">${validees}</p>
-                <p class="text-sm text-gray-600">Validées</p>
-            </div>
-            <div class="text-center p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
-                <i class="fas fa-flag-checkered text-blue-600 text-3xl mb-2"></i>
-                <p class="text-2xl font-bold text-gray-900">${terminees}</p>
-                <p class="text-sm text-gray-600">Terminées</p>
-            </div>
-            <div class="text-center p-4 bg-red-50 rounded-lg border-2 border-red-200">
-                <i class="fas fa-times-circle text-red-600 text-3xl mb-2"></i>
-                <p class="text-2xl font-bold text-gray-900">${annulees}</p>
-                <p class="text-sm text-gray-600">Annulées</p>
-            </div>
-        </div>
-    </div>
-
-</div>
-
 <script>
-    // Graphique en camembert - Répartition par statut
-    const statutCtx = document.getElementById('statutChart').getContext('2d');
-    new Chart(statutCtx, {
-        type: 'doughnut',
-        data: {
-            labels: [
-                <c:forEach var="entry" items="${repartitionStatuts}" varStatus="status">
-                '${entry.key}'${!status.last ? ',' : ''}
-                </c:forEach>
-            ],
-            datasets: [{
-                data: [
-                    <c:forEach var="entry" items="${repartitionStatuts}" varStatus="status">
-                    ${entry.value}${!status.last ? ',' : ''}
-                    </c:forEach>
-                ],
-                backgroundColor: ['#fbbf24', '#10b981', '#3b82f6', '#ef4444'],
-                borderWidth: 2,
-                borderColor: '#fff'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                }
+    // Apply delayed animations and percentage widths set via data- attributes
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('[data-delay]').forEach(function(el) {
+            var d = el.getAttribute('data-delay');
+            if (d) {
+                el.style.animationDelay = d + 's';
             }
-        }
-    });
+        });
 
-    // Graphique en ligne - Consultations par mois
-    const monthCtx = document.getElementById('monthChart').getContext('2d');
-    new Chart(monthCtx, {
-        type: 'line',
-        data: {
-            labels: [
-                <c:forEach var="entry" items="${consultationsParMois}" varStatus="status">
-                '${entry.key}'${!status.last ? ',' : ''}
-                </c:forEach>
-            ],
-            datasets: [{
-                label: 'Consultations',
-                data: [
-                    <c:forEach var="entry" items="${consultationsParMois}" varStatus="status">
-                    ${entry.value}${!status.last ? ',' : ''}
-                    </c:forEach>
-                ],
-                borderColor: '#6366f1',
-                backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                tension: 0.4,
-                fill: true,
-                pointRadius: 4,
-                pointBackgroundColor: '#6366f1'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
-                    }
-                }
+        document.querySelectorAll('[data-percentage]').forEach(function(el) {
+            var p = el.getAttribute('data-percentage');
+            if (p) {
+                el.style.width = p + '%';
             }
-        }
+        });
     });
 </script>
-
-</body>
-</html>

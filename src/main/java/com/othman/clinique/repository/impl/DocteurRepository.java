@@ -18,17 +18,21 @@ public class DocteurRepository implements IDocteurRepository {
     @Override
     public Optional<Docteur> findByEmail(String email) {
         EntityManager em = JPAUtil.getEntityManager();
-
         try {
-            TypedQuery<Docteur> query = em.createQuery(
-                    "SELECT d FROM Docteur d WHERE d.email = :email",
-                    Docteur.class
-            );
-            query.setParameter("email", email);
+            // EAGER FETCH pour éviter LazyInitializationException
+        List<Docteur> results = em.createQuery(
+                "SELECT DISTINCT d FROM Docteur d " +
+                    "LEFT JOIN FETCH d.departement " +
+                    "LEFT JOIN FETCH d.planning " +
+                    "WHERE LOWER(d.email) = :email",
+                Docteur.class
+            )
+            .setParameter("email", email == null ? null : email.toLowerCase().trim())
+            .getResultList();
 
-            return Optional.ofNullable(query.getSingleResult());
-
-        } catch (NoResultException e) {
+            return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Erreur findByEmail", e);
             return Optional.empty();
         } finally {
             JPAUtil.close(em);
@@ -38,15 +42,13 @@ public class DocteurRepository implements IDocteurRepository {
     @Override
     public boolean existsByEmail(String email) {
         EntityManager em = JPAUtil.getEntityManager();
-
         try {
-            Long count = em.createQuery(
-                            "SELECT COUNT(d) FROM Docteur d WHERE d.email = :email",
-                            Long.class
-                    )
-                    .setParameter("email", email)
-                    .getSingleResult();
-
+        Long count = em.createQuery(
+                "SELECT COUNT(d) FROM Docteur d WHERE LOWER(d.email) = :email",
+                Long.class
+            )
+            .setParameter("email", email == null ? null : email.toLowerCase().trim())
+            .getSingleResult();
             return count > 0;
         } finally {
             JPAUtil.close(em);
@@ -56,10 +58,12 @@ public class DocteurRepository implements IDocteurRepository {
     @Override
     public List<Docteur> findByDepartementId(Long departementId) {
         EntityManager em = JPAUtil.getEntityManager();
-
         try {
             return em.createQuery(
-                            "SELECT d FROM Docteur d WHERE d.departement.id = :depId ORDER BY d.nom",
+                            "SELECT DISTINCT d FROM Docteur d " +
+                                    "LEFT JOIN FETCH d.departement " +
+                                    "WHERE d.departement.id = :depId " +
+                                    "ORDER BY d.nom",
                             Docteur.class
                     )
                     .setParameter("depId", departementId)
@@ -72,10 +76,12 @@ public class DocteurRepository implements IDocteurRepository {
     @Override
     public List<Docteur> findBySpecialite(String specialite) {
         EntityManager em = JPAUtil.getEntityManager();
-
         try {
             return em.createQuery(
-                            "SELECT d FROM Docteur d WHERE d.specialite = :spec ORDER BY d.nom",
+                            "SELECT DISTINCT d FROM Docteur d " +
+                                    "LEFT JOIN FETCH d.departement " +
+                                    "WHERE d.specialite = :spec " +
+                                    "ORDER BY d.nom",
                             Docteur.class
                     )
                     .setParameter("spec", specialite)
@@ -88,19 +94,22 @@ public class DocteurRepository implements IDocteurRepository {
     @Override
     public Optional<Docteur> findByIdWithPlanning(Long docteurId) {
         EntityManager em = JPAUtil.getEntityManager();
-
         try {
-            TypedQuery<Docteur> query = em.createQuery(
-                    "SELECT DISTINCT d FROM Docteur d " +
-                            "LEFT JOIN FETCH d.planning " +
-                            "WHERE d.id = :id",
-                    Docteur.class
-            );
-            query.setParameter("id", docteurId);
+            List<Docteur> results = em.createQuery(
+                            "SELECT DISTINCT d FROM Docteur d " +
+                                    "LEFT JOIN FETCH d.departement " +
+                                    "LEFT JOIN FETCH d.planning p " +
+                                    "LEFT JOIN FETCH p.patient " +
+                                    "LEFT JOIN FETCH p.salle " +
+                                    "WHERE d.id = :id",
+                            Docteur.class
+                    )
+                    .setParameter("id", docteurId)
+                    .getResultList();
 
-            return Optional.ofNullable(query.getSingleResult());
-
-        } catch (NoResultException e) {
+            return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Erreur findByIdWithPlanning", e);
             return Optional.empty();
         } finally {
             JPAUtil.close(em);
@@ -110,16 +119,20 @@ public class DocteurRepository implements IDocteurRepository {
     @Override
     public List<Docteur> search(String searchTerm) {
         EntityManager em = JPAUtil.getEntityManager();
-        String jpql = "SELECT d FROM Docteur d WHERE " +
-                "LOWER(d.nom) LIKE LOWER(:search) OR " +
-                "LOWER(d.prenom) LIKE LOWER(:search) OR " +
-                "LOWER(d.email) LIKE LOWER(:search)";
+        try {
+            String jpql = "SELECT DISTINCT d FROM Docteur d " +
+                    "LEFT JOIN FETCH d.departement " +
+                    "WHERE LOWER(d.nom) LIKE LOWER(:search) OR " +
+                    "LOWER(d.prenom) LIKE LOWER(:search) OR " +
+                    "LOWER(d.email) LIKE LOWER(:search)";
 
-        TypedQuery<Docteur> query = em.createQuery(jpql, Docteur.class);
-        query.setParameter("search", "%" + searchTerm + "%");
-        return query.getResultList();
+            TypedQuery<Docteur> query = em.createQuery(jpql, Docteur.class);
+            query.setParameter("search", "%" + searchTerm + "%");
+            return query.getResultList();
+        } finally {
+            JPAUtil.close(em);
+        }
     }
-
 
     @Override
     public Docteur save(Docteur docteur) {
@@ -155,14 +168,22 @@ public class DocteurRepository implements IDocteurRepository {
         }
     }
 
-
     @Override
     public Optional<Docteur> findById(Long id) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            Docteur docteur = em.find(Docteur.class, id);
-            return Optional.ofNullable(docteur);
-        }finally {
+            // Simple find avec FETCH du département (obligatoire)
+            List<Docteur> results = em.createQuery(
+                            "SELECT DISTINCT d FROM Docteur d " +
+                                    "LEFT JOIN FETCH d.departement " +
+                                    "WHERE d.id = :id",
+                            Docteur.class
+                    )
+                    .setParameter("id", id)
+                    .getResultList();
+
+            return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
+        } finally {
             JPAUtil.close(em);
         }
     }
@@ -172,7 +193,9 @@ public class DocteurRepository implements IDocteurRepository {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             return em.createQuery(
-                    "SELECT d FROM Docteur d ORDER BY d.nom, d.prenom",
+                    "SELECT DISTINCT d FROM Docteur d " +
+                            "LEFT JOIN FETCH d.departement " +
+                            "ORDER BY d.nom, d.prenom",
                     Docteur.class
             ).getResultList();
         } finally {
@@ -190,18 +213,14 @@ public class DocteurRepository implements IDocteurRepository {
     @Override
     public void deleteById(Long id) {
         EntityManager em = JPAUtil.getEntityManager();
-
         try {
             em.getTransaction().begin();
-
             Docteur docteur = em.find(Docteur.class, id);
             if (docteur != null) {
                 em.remove(docteur);
                 LOGGER.info("Docteur supprimé - ID: " + id);
             }
-
             em.getTransaction().commit();
-
         } catch (Exception e) {
             handleTransactionException(em, "Erreur suppression docteur", e);
             throw new RuntimeException("Impossible de supprimer le docteur", e);
@@ -213,7 +232,6 @@ public class DocteurRepository implements IDocteurRepository {
     @Override
     public Long count() {
         EntityManager em = JPAUtil.getEntityManager();
-
         try {
             return em.createQuery("SELECT COUNT(d) FROM Docteur d", Long.class)
                     .getSingleResult();
@@ -226,6 +244,7 @@ public class DocteurRepository implements IDocteurRepository {
     public boolean existsById(Long id) {
         return findById(id).isPresent();
     }
+
     private void handleTransactionException(EntityManager em, String message, Exception e) {
         if (em.getTransaction().isActive()) {
             em.getTransaction().rollback();

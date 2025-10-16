@@ -19,17 +19,23 @@ public class PatientRepositoryImpl implements IPatientRepository {
     public Optional<Patient> findByEmail(String email) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            Patient patient = em.createQuery("SELECT p FROM Patient p WHERE p.email = :email", Patient.class)
+            // NE PAS charger les consultations lors du login !
+            // Elles seront chargées plus tard si nécessaire
+            List<Patient> results = em.createQuery(
+                            "SELECT p FROM Patient p " +
+                                    "WHERE p.email = :email",
+                            Patient.class)
                     .setParameter("email", email)
-                    .getSingleResult();
-            return Optional.ofNullable(patient);
-        } catch (NoResultException e) {
+                    .getResultList();
+
+            return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Erreur findByEmail", e);
             return Optional.empty();
         } finally {
             JPAUtil.close(em);
         }
     }
-
     @Override
     public boolean existsByEmail(String email) {
         EntityManager em = JPAUtil.getEntityManager();
@@ -48,16 +54,15 @@ public class PatientRepositoryImpl implements IPatientRepository {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             TypedQuery<Patient> query = em.createQuery(
-                    "SELECT p FROM Patient p WHERE " +
-                            "LOWER(p.nom) LIKE LOWER(:search) OR " +
+                    "SELECT DISTINCT p FROM Patient p " +
+                            "LEFT JOIN FETCH p.consultations " +
+                            "WHERE LOWER(p.nom) LIKE LOWER(:search) OR " +
                             "LOWER(p.prenom) LIKE LOWER(:search) OR " +
                             "LOWER(p.email) LIKE LOWER(:search)",
                     Patient.class
             );
             query.setParameter("search", "%" + searchTerm + "%");
-
             return query.getResultList();
-
         } finally {
             JPAUtil.close(em);
         }
@@ -65,19 +70,22 @@ public class PatientRepositoryImpl implements IPatientRepository {
 
     @Override
     public Optional<Patient> findByIdWithConsultations(Long patientId) {
-        EntityManager  em = JPAUtil.getEntityManager();
+        EntityManager em = JPAUtil.getEntityManager();
         try {
-            TypedQuery<Patient> query = em.createQuery(
-                    "SELECT DISTINCT p FROM Patient p " +
-                            "LEFT JOIN FETCH p.consultations " +
-                            "WHERE p.id = :id",
-                    Patient.class
-            );
-            query.setParameter("id", patientId);
+            List<Patient> results = em.createQuery(
+                            "SELECT DISTINCT p FROM Patient p " +
+                                    "LEFT JOIN FETCH p.consultations c " +
+                                    "LEFT JOIN FETCH c.docteur " +
+                                    "LEFT JOIN FETCH c.salle " +
+                                    "WHERE p.id = :id",
+                            Patient.class
+                    )
+                    .setParameter("id", patientId)
+                    .getResultList();
 
-            return Optional.ofNullable(query.getSingleResult());
-
-        } catch (NoResultException e) {
+            return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Erreur findByIdWithConsultations", e);
             return Optional.empty();
         } finally {
             JPAUtil.close(em);
@@ -96,9 +104,9 @@ public class PatientRepositoryImpl implements IPatientRepository {
         } catch (Exception e) {
             handleTransactionException(em, "Error saving Patient", e);
             throw new RuntimeException();
-            } finally {
+        } finally {
             JPAUtil.close(em);
-            }
+        }
     }
 
     @Override
@@ -125,6 +133,7 @@ public class PatientRepositoryImpl implements IPatientRepository {
     public Optional<Patient> findById(Long id) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
+            // Simple findById sans FETCH (pour éviter de charger trop de données)
             Patient patient = em.find(Patient.class, id);
             return Optional.ofNullable(patient);
         } finally {
@@ -136,7 +145,9 @@ public class PatientRepositoryImpl implements IPatientRepository {
     public List<Patient> findAll() {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            return em.createQuery("SELECT p FROM Patient p", Patient.class).getResultList();
+            // Pas de FETCH ici car on liste juste les patients
+            return em.createQuery("SELECT p FROM Patient p ORDER BY p.nom, p.prenom", Patient.class)
+                    .getResultList();
         } finally {
             JPAUtil.close(em);
         }
