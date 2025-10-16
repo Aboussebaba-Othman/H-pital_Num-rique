@@ -82,7 +82,7 @@ public class AdminDashboardServlet extends HttpServlet {
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Erreur lors du chargement du dashboard admin", e);
             request.setAttribute("error", "Erreur lors du chargement du dashboard");
-            request.getRequestDispatcher("/WEB-INF/views/error/error.jsp")
+            request.getRequestDispatcher("/WEB-INF/views/error/403.jsp")
                     .forward(request, response);
         }
     }
