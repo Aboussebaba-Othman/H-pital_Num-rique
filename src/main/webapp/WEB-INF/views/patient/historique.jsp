@@ -7,360 +7,185 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historique des Consultations - Clinique</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .status-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 50px;
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-        .status-RESERVEE { background-color: #fff3cd; color: #856404; }
-        .status-VALIDEE { background-color: #d1ecf1; color: #0c5460; }
-        .status-TERMINEE { background-color: #d4edda; color: #155724; }
-        .status-ANNULEE { background-color: #f8d7da; color: #721c24; }
-        .timeline-item {
-            border-left: 3px solid #dee2e6;
-            padding-left: 20px;
-            padding-bottom: 20px;
-            position: relative;
-        }
-        .timeline-item:last-child {
-            border-left: none;
-        }
-        .timeline-dot {
-            position: absolute;
-            left: -9px;
-            width: 15px;
-            height: 15px;
-            border-radius: 50%;
-            background-color: #6c757d;
-        }
-        .timeline-dot.success {
-            background-color: #28a745;
-        }
-        .timeline-dot.danger {
-            background-color: #dc3545;
-        }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="${pageContext.request.contextPath}/patient/dashboard">
-            <i class="fas fa-hospital"></i> Clinique
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="${pageContext.request.contextPath}/patient/dashboard">
-                        <i class="fas fa-home"></i> Tableau de bord
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="${pageContext.request.contextPath}/patient/docteurs">
-                        <i class="fas fa-user-md"></i> Docteurs
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="${pageContext.request.contextPath}/patient/consultations">
-                        <i class="fas fa-calendar-check"></i> Mes Consultations
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active" href="${pageContext.request.contextPath}/patient/historique">
-                        <i class="fas fa-history"></i> Historique
-                    </a>
-                </li>
-            </ul>
-            <ul class="navbar-nav">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
-                       data-bs-toggle="dropdown">
-                        <i class="fas fa-user"></i> ${sessionScope.userConnecte.prenom} ${sessionScope.userConnecte.nom}
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/logout">
-                            <i class="fas fa-sign-out-alt"></i> Déconnexion
-                        </a></li>
-                    </ul>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
 
-<div class="container mt-4">
+<!-- Définir la page active pour la sidebar -->
+<c:set var="pageParam" value="historique" scope="request"/>
+
+<!-- Inclure la sidebar patient -->
+<%@ include file="../common/patient-nav.jsp" %>
+
+<div class="max-w-7xl mx-auto py-6">
     <!-- En-tête -->
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h2><i class="fas fa-history text-primary"></i> Historique des Consultations</h2>
-            <p class="text-muted">Consultez votre historique médical complet</p>
-        </div>
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold"><i class="fas fa-history text-indigo-600 mr-2"></i> Historique des Consultations</h2>
+        <p class="text-gray-500">Consultez votre historique médical complet</p>
     </div>
 
     <!-- Statistiques -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card border-success">
-                <div class="card-body text-center">
-                    <i class="fas fa-check-circle fa-3x text-success mb-2"></i>
-                    <h3 class="mb-0">${consultationsTerminees}</h3>
-                    <p class="text-muted mb-0">Consultations terminées</p>
-                </div>
-            </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="p-4 bg-white rounded shadow text-center">
+            <i class="fas fa-check-circle text-green-500 text-2xl mb-2"></i>
+            <div class="text-xl font-semibold">${consultationsTerminees}</div>
+            <div class="text-sm text-gray-500">Consultations terminées</div>
         </div>
-        <div class="col-md-4">
-            <div class="card border-danger">
-                <div class="card-body text-center">
-                    <i class="fas fa-times-circle fa-3x text-danger mb-2"></i>
-                    <h3 class="mb-0">${consultationsAnnulees}</h3>
-                    <p class="text-muted mb-0">Consultations annulées</p>
-                </div>
-            </div>
+        <div class="p-4 bg-white rounded shadow text-center">
+            <i class="fas fa-times-circle text-red-500 text-2xl mb-2"></i>
+            <div class="text-xl font-semibold">${consultationsAnnulees}</div>
+            <div class="text-sm text-gray-500">Consultations annulées</div>
         </div>
-        <div class="col-md-4">
-            <div class="card border-primary">
-                <div class="card-body text-center">
-                    <i class="fas fa-calendar-alt fa-3x text-primary mb-2"></i>
-                    <h3 class="mb-0">${historique.size()}</h3>
-                    <p class="text-muted mb-0">Total consultations</p>
-                </div>
-            </div>
+        <div class="p-4 bg-white rounded shadow text-center">
+            <i class="fas fa-calendar-alt text-indigo-600 text-2xl mb-2"></i>
+            <div class="text-xl font-semibold">${historique.size()}</div>
+            <div class="text-sm text-gray-500">Total consultations</div>
         </div>
     </div>
 
     <!-- Filtres -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="get" class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label">Filtrer par année</label>
-                    <select class="form-select" name="annee" onchange="this.form.submit()">
-                        <option value="">Toutes les années</option>
-                        <c:forEach items="${anneesDisponibles}" var="annee">
-                            <option value="${annee}" ${annee == anneeFiltre ? 'selected' : ''}>
-                                    ${annee}
-                            </option>
-                        </c:forEach>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Affichage</label>
-                    <select class="form-select" id="viewMode">
-                        <option value="table">Vue tableau</option>
-                        <option value="timeline">Vue chronologique</option>
-                    </select>
-                </div>
-            </form>
-        </div>
+    <div class="bg-white p-4 rounded shadow mb-6">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm text-gray-600 mb-1">Filtrer par année</label>
+                <select class="w-full border rounded px-3 py-2" name="annee" onchange="this.form.submit()">
+                    <option value="">Toutes les années</option>
+                    <c:forEach items="${anneesDisponibles}" var="annee">
+                        <option value="${annee}" ${annee == anneeFiltre ? 'selected' : ''}>${annee}</option>
+                    </c:forEach>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm text-gray-600 mb-1">Affichage</label>
+                <select class="w-full border rounded px-3 py-2" id="viewMode">
+                    <option value="table">Vue tableau</option>
+                    <option value="timeline">Vue chronologique</option>
+                </select>
+            </div>
+        </form>
     </div>
 
     <!-- Vue Tableau -->
-    <div id="tableView" class="card">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="fas fa-list"></i> Historique détaillé</h5>
-        </div>
-        <div class="card-body">
-            <c:choose>
-                <c:when test="${empty historique}">
-                    <div class="text-center py-5">
-                        <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
-                        <p class="text-muted mb-0">Aucune consultation dans l'historique</p>
-                    </div>
-                </c:when>
-                <c:otherwise>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                            <tr>
-                                <th>Réf.</th>
-                                <th>Date</th>
-                                <th>Heure</th>
-                                <th>Docteur</th>
-                                <th>Motif</th>
-                                <th>Statut</th>
-                                <th>Actions</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <c:forEach items="${historique}" var="consultation">
-                                <tr>
-                                    <td><strong>#${consultation.idConsultation}</strong></td>
-                                    <td>
-                                        <fmt:formatDate value="${consultation.date}" pattern="dd/MM/yyyy" var="dateFormatted"/>
-                                            ${dateFormatted}
-                                    </td>
-                                    <td>
-                                        <fmt:formatDate value="${consultation.heure}" pattern="HH:mm" var="heureFormatted"/>
-                                            ${heureFormatted}
-                                    </td>
-                                    <td>
-                                        <strong>Dr. ${consultation.docteur.prenom} ${consultation.docteur.nom}</strong>
-                                        <br>
-                                        <small class="text-muted">${consultation.docteur.specialite}</small>
-                                    </td>
-                                    <td>
-                                                <span class="d-inline-block text-truncate" style="max-width: 200px;"
-                                                      title="${consultation.motifConsultation}">
-                                                        ${consultation.motifConsultation}
-                                                </span>
-                                    </td>
-                                    <td>
-                                                <span class="status-badge status-${consultation.statut}">
-                                                    <c:choose>
-                                                        <c:when test="${consultation.statut == 'RESERVEE'}">Réservée</c:when>
-                                                        <c:when test="${consultation.statut == 'VALIDEE'}">Validée</c:when>
-                                                        <c:when test="${consultation.statut == 'TERMINEE'}">Terminée</c:when>
-                                                        <c:when test="${consultation.statut == 'ANNULEE'}">Annulée</c:when>
-                                                    </c:choose>
-                                                </span>
-                                    </td>
-                                    <td>
-                                        <c:if test="${consultation.statut == 'TERMINEE' && not empty consultation.compteRendu}">
-                                            <button type="button" class="btn btn-sm btn-outline-info"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#compteRenduModal${consultation.idConsultation}">
-                                                <i class="fas fa-file-alt"></i>
-                                            </button>
-                                        </c:if>
-                                    </td>
-                                </tr>
-
-                                <!-- Modal Compte-rendu -->
+    <div id="tableView" class="bg-white rounded shadow p-4 mb-6">
+        <h3 class="font-semibold mb-3">Historique détaillé</h3>
+        <c:choose>
+            <c:when test="${empty historique}">
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-inbox text-3xl mb-3"></i>
+                    <p>Aucune consultation dans l'historique</p>
+                </div>
+            </c:when>
+            <c:otherwise>
+                <div class="space-y-3">
+                    <c:forEach items="${historique}" var="consultation">
+                        <div class="flex items-center justify-between p-4 border rounded-lg">
+                            <div>
+                                <div class="font-semibold">#${consultation.idConsultation} — <fmt:formatDate value="${consultation.date}" pattern="dd/MM/yyyy"/> <span class="text-gray-500"> <fmt:formatDate value="${consultation.heure}" pattern="HH:mm"/></span></div>
+                                <div class="text-sm text-gray-600">Dr. ${consultation.docteur.prenom} ${consultation.docteur.nom} · ${consultation.docteur.specialite}</div>
+                                <div class="text-sm text-gray-500 truncate max-w-xl" title="${consultation.motifConsultation}">${consultation.motifConsultation}</div>
+                            </div>
+                            <div class="flex flex-col items-end gap-2">
+                                <span class="px-3 py-1 rounded-full text-sm ${consultation.statut == 'TERMINEE' ? 'bg-green-100 text-green-800' : (consultation.statut == 'ANNULEE' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-700')}">
+                                    <c:choose>
+                                        <c:when test="${consultation.statut == 'RESERVEE'}">Réservée</c:when>
+                                        <c:when test="${consultation.statut == 'VALIDEE'}">Validée</c:when>
+                                        <c:when test="${consultation.statut == 'TERMINEE'}">Terminée</c:when>
+                                        <c:when test="${consultation.statut == 'ANNULEE'}">Annulée</c:when>
+                                    </c:choose>
+                                </span>
                                 <c:if test="${consultation.statut == 'TERMINEE' && not empty consultation.compteRendu}">
-                                    <div class="modal fade" id="compteRenduModal${consultation.idConsultation}" tabindex="-1">
-                                        <div class="modal-dialog modal-lg">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">
-                                                        <i class="fas fa-file-medical"></i> Compte-rendu de consultation
-                                                    </h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <div class="row mb-3">
-                                                        <div class="col-md-6">
-                                                            <p class="mb-1"><strong>Référence:</strong> #${consultation.idConsultation}</p>
-                                                            <p class="mb-1"><strong>Date:</strong>
-                                                                <fmt:formatDate value="${consultation.date}" pattern="dd/MM/yyyy"/>
-                                                            </p>
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <p class="mb-1"><strong>Docteur:</strong>
-                                                                Dr. ${consultation.docteur.prenom} ${consultation.docteur.nom}
-                                                            </p>
-                                                            <p class="mb-1"><strong>Spécialité:</strong>
-                                                                    ${consultation.docteur.specialite}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                    <hr>
-                                                    <h6 class="mb-3"><i class="fas fa-notes-medical"></i> Compte-rendu médical</h6>
-                                                    <div class="bg-light p-3 rounded">
-                                                        <p class="mb-0">${consultation.compteRendu}</p>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                                        Fermer
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <button type="button" class="px-3 py-1 text-sky-700 border border-sky-200 rounded" onclick="openCompteRendu('${consultation.idConsultation}')"><i class="fas fa-file-alt mr-1"></i> Compte-rendu</button>
                                 </c:if>
-                            </c:forEach>
-                            </tbody>
-                        </table>
-                    </div>
-                </c:otherwise>
-            </c:choose>
-        </div>
+                            </div>
+                        </div>
+
+                        <!-- Compte-rendu (hidden) -->
+                        <c:if test="${consultation.statut == 'TERMINEE' && not empty consultation.compteRendu}">
+                            <div id="compteRenduModal${consultation.idConsultation}" class="hidden fixed inset-0 flex items-center justify-center z-50">
+                                <div class="fixed inset-0 bg-black opacity-30"></div>
+                                <div class="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 z-10">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <h5 class="font-semibold">Compte-rendu de consultation</h5>
+                                        <button class="text-gray-600" onclick="closeCompteRendu('${consultation.idConsultation}')">Fermer</button>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                                        <div><strong>Référence:</strong> #${consultation.idConsultation}<br><strong>Date:</strong> <fmt:formatDate value="${consultation.date}" pattern="dd/MM/yyyy"/></div>
+                                        <div><strong>Docteur:</strong> Dr. ${consultation.docteur.prenom} ${consultation.docteur.nom}<br><strong>Spécialité:</strong> ${consultation.docteur.specialite}</div>
+                                    </div>
+                                    <hr class="my-3">
+                                    <div class="text-sm text-gray-700">${consultation.compteRendu}</div>
+                                </div>
+                            </div>
+                        </c:if>
+                    </c:forEach>
+                </div>
+            </c:otherwise>
+        </c:choose>
     </div>
 
     <!-- Vue Chronologique (Timeline) -->
-    <div id="timelineView" class="card" style="display: none;">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="fas fa-stream"></i> Vue chronologique</h5>
-        </div>
-        <div class="card-body">
-            <c:choose>
-                <c:when test="${empty historique}">
-                    <div class="text-center py-5">
-                        <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
-                        <p class="text-muted mb-0">Aucune consultation dans l'historique</p>
-                    </div>
-                </c:when>
-                <c:otherwise>
-                    <div class="mt-4">
-                        <c:forEach items="${historique}" var="consultation">
-                            <div class="timeline-item">
-                                <div class="timeline-dot ${consultation.statut == 'TERMINEE' ? 'success' : consultation.statut == 'ANNULEE' ? 'danger' : ''}"></div>
-                                <div class="card mb-3">
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <h6 class="card-title mb-2">
-                                                    <fmt:formatDate value="${consultation.date}" pattern="dd MMMM yyyy"/>
-                                                    à
-                                                    <fmt:formatDate value="${consultation.heure}" pattern="HH:mm"/>
-                                                </h6>
-                                                <p class="mb-1">
-                                                    <i class="fas fa-user-md text-primary"></i>
-                                                    <strong>Dr. ${consultation.docteur.prenom} ${consultation.docteur.nom}</strong>
-                                                    - ${consultation.docteur.specialite}
-                                                </p>
-                                                <p class="mb-2">
-                                                    <i class="fas fa-notes-medical text-primary"></i>
-                                                        ${consultation.motifConsultation}
-                                                </p>
-                                            </div>
-                                            <span class="status-badge status-${consultation.statut}">
-                                                    <c:choose>
-                                                        <c:when test="${consultation.statut == 'TERMINEE'}">Terminée</c:when>
-                                                        <c:when test="${consultation.statut == 'ANNULEE'}">Annulée</c:when>
-                                                    </c:choose>
-                                                </span>
-                                        </div>
-                                        <c:if test="${consultation.statut == 'TERMINEE' && not empty consultation.compteRendu}">
-                                            <button type="button" class="btn btn-sm btn-outline-info mt-2"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#compteRenduModal${consultation.idConsultation}">
-                                                <i class="fas fa-file-alt"></i> Voir le compte-rendu
-                                            </button>
-                                        </c:if>
+    <div id="timelineView" class="hidden bg-white rounded shadow p-4 mb-6">
+        <h3 class="font-semibold mb-3">Vue chronologique</h3>
+        <c:choose>
+            <c:when test="${empty historique}">
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-inbox text-3xl mb-3"></i>
+                    <p>Aucune consultation dans l'historique</p>
+                </div>
+            </c:when>
+            <c:otherwise>
+                <div class="space-y-4">
+                    <c:forEach items="${historique}" var="consultation">
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-3 h-3 rounded-full ${consultation.statut == 'TERMINEE' ? 'bg-green-500' : (consultation.statut == 'ANNULEE' ? 'bg-red-500' : 'bg-gray-400')}"></div>
+                            </div>
+                            <div class="flex-1 bg-white border rounded p-4">
+                                <div class="flex justify-between">
+                                    <div>
+                                        <div class="font-medium"><fmt:formatDate value="${consultation.date}" pattern="dd MMMM yyyy"/> à <fmt:formatDate value="${consultation.heure}" pattern="HH:mm"/></div>
+                                        <div class="text-sm text-gray-600">Dr. ${consultation.docteur.prenom} ${consultation.docteur.nom} — ${consultation.docteur.specialite}</div>
+                                    </div>
+                                    <div class="text-sm ${consultation.statut == 'TERMINEE' ? 'text-green-600' : (consultation.statut == 'ANNULEE' ? 'text-red-600' : 'text-gray-600')}">
+                                        <c:choose>
+                                            <c:when test="${consultation.statut == 'TERMINEE'}">Terminée</c:when>
+                                            <c:when test="${consultation.statut == 'ANNULEE'}">Annulée</c:when>
+                                            <c:otherwise>${consultation.statut}</c:otherwise>
+                                        </c:choose>
                                     </div>
                                 </div>
+                                <div class="mt-2 text-sm text-gray-700">${consultation.motifConsultation}</div>
                             </div>
-                        </c:forEach>
-                    </div>
-                </c:otherwise>
-            </c:choose>
-        </div>
+                        </div>
+                    </c:forEach>
+                </div>
+            </c:otherwise>
+        </c:choose>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Gestion du changement de vue
     document.getElementById('viewMode').addEventListener('change', function() {
         const tableView = document.getElementById('tableView');
         const timelineView = document.getElementById('timelineView');
-
         if (this.value === 'timeline') {
-            tableView.style.display = 'none';
-            timelineView.style.display = 'block';
+            tableView.classList.add('hidden');
+            timelineView.classList.remove('hidden');
         } else {
-            tableView.style.display = 'block';
-            timelineView.style.display = 'none';
+            tableView.classList.remove('hidden');
+            timelineView.classList.add('hidden');
         }
     });
+
+    function openCompteRendu(id){
+        const el = document.getElementById('compteRenduModal'+id);
+        if(el) el.classList.remove('hidden');
+    }
+    function closeCompteRendu(id){
+        const el = document.getElementById('compteRenduModal'+id);
+        if(el) el.classList.add('hidden');
+    }
 </script>
 </body>
 </html>

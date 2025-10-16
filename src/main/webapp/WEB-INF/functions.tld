@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taglib xmlns="http://java.sun.com/xml/ns/javaee"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+        http://java.sun.com/xml/ns/javaee/web-jsptaglibrary_2_1.xsd"
+        version="2.1">
+
+    <tlib-version>1.0</tlib-version>
+    <short-name>fn</short-name>
+    <uri>http://clinique.othman.com/functions</uri>
+
+    <function>
+        <name>formatDate</name>
+        <function-class>com.othman.clinique.util.DateUtil</function-class>
+        <function-signature>java.lang.String formatDate(java.time.LocalDate)</function-signature>
+    </function>
+
+    <function>
+        <name>formatDateLong</name>
+        <function-class>com.othman.clinique.util.DateUtil</function-class>
+        <function-signature>java.lang.String formatDateLong(java.time.LocalDate)</function-signature>
+    </function>
+
+    <function>
+        <name>formatTime</name>
+        <function-class>com.othman.clinique.util.DateUtil</function-class>
+        <function-signature>java.lang.String formatTime(java.time.LocalTime)</function-signature>
+    </function>
+
+    <function>
+        <name>formatDateTime</name>
+        <function-class>com.othman.clinique.util.DateUtil</function-class>
+        <function-signature>java.lang.String formatDateTime(java.time.LocalDate, java.time.LocalTime)</function-signature>
+    </function>
+
+    <function>
+        <name>isPast</name>
+        <function-class>com.othman.clinique.util.DateUtil</function-class>
+        <function-signature>boolean isPast(java.time.LocalDate)</function-signature>
+    </function>
+
+    <function>
+        <name>isFuture</name>
+        <function-class>com.othman.clinique.util.DateUtil</function-class>
+        <function-signature>boolean isFuture(java.time.LocalDate)</function-signature>
+    </function>
+
+    <function>
+        <name>isToday</name>
+        <function-class>com.othman.clinique.util.DateUtil</function-class>
+        <function-signature>boolean isToday(java.time.LocalDate)</function-signature>
+    </function>
+
+</taglib>

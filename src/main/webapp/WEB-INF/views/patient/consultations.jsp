@@ -1,6 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<%@ taglib uri="http://clinique.othman.com/functions" prefix="df" %>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -103,24 +103,6 @@
         <c:remove var="errorMessage" scope="session"/>
     </c:if>
 
-    <!-- Filtre par statut -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="get" class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label">Filtrer par statut</label>
-                    <select class="form-select" name="statut" onchange="this.form.submit()">
-                        <option value="">Tous les statuts</option>
-                        <option value="RESERVEE" ${statutFiltre == 'RESERVEE' ? 'selected' : ''}>Réservée</option>
-                        <option value="VALIDEE" ${statutFiltre == 'VALIDEE' ? 'selected' : ''}>Validée</option>
-                        <option value="TERMINEE" ${statutFiltre == 'TERMINEE' ? 'selected' : ''}>Terminée</option>
-                        <option value="ANNULEE" ${statutFiltre == 'ANNULEE' ? 'selected' : ''}>Annulée</option>
-                    </select>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <!-- Consultations Futures -->
     <div class="card mb-4">
         <div class="card-header bg-primary text-white">
@@ -147,14 +129,8 @@
                             <tbody>
                             <c:forEach items="${consultationsFutures}" var="consultation">
                                 <tr>
-                                    <td>
-                                        <fmt:formatDate value="${consultation.date}" pattern="dd/MM/yyyy" var="dateFormatted"/>
-                                            ${dateFormatted}
-                                    </td>
-                                    <td>
-                                        <fmt:formatDate value="${consultation.heure}" pattern="HH:mm" var="heureFormatted"/>
-                                            ${heureFormatted}
-                                    </td>
+                                    <td>${df:formatDate(consultation.date)}</td>
+                                    <td>${df:formatTime(consultation.heure)}</td>
                                     <td>
                                         <strong>Dr. ${consultation.docteur.prenom} ${consultation.docteur.nom}</strong>
                                         <br>
@@ -220,14 +196,8 @@
                             <tbody>
                             <c:forEach items="${consultationsPassees}" var="consultation">
                                 <tr>
-                                    <td>
-                                        <fmt:formatDate value="${consultation.date}" pattern="dd/MM/yyyy" var="dateFormatted"/>
-                                            ${dateFormatted}
-                                    </td>
-                                    <td>
-                                        <fmt:formatDate value="${consultation.heure}" pattern="HH:mm" var="heureFormatted"/>
-                                            ${heureFormatted}
-                                    </td>
+                                    <td>${df:formatDate(consultation.date)}</td>
+                                    <td>${df:formatTime(consultation.heure)}</td>
                                     <td>
                                         <strong>Dr. ${consultation.docteur.prenom} ${consultation.docteur.nom}</strong>
                                         <br>
@@ -270,9 +240,7 @@
                                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                 </div>
                                                 <div class="modal-body">
-                                                    <p><strong>Date:</strong>
-                                                        <fmt:formatDate value="${consultation.date}" pattern="dd/MM/yyyy"/>
-                                                    </p>
+                                                    <p><strong>Date:</strong> ${df:formatDate(consultation.date)}</p>
                                                     <p><strong>Docteur:</strong>
                                                         Dr. ${consultation.docteur.prenom} ${consultation.docteur.nom}
                                                     </p>
@@ -295,12 +263,6 @@
                 </c:otherwise>
             </c:choose>
         </div>
-    </div>
-
-    <!-- Statistiques -->
-    <div class="alert alert-light border mt-4">
-        <i class="fas fa-chart-bar text-primary"></i>
-        <strong>Total:</strong> ${totalConsultations} consultation(s)
     </div>
 </div>
 

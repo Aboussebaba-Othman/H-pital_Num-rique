@@ -2,6 +2,7 @@ package com.othman.clinique.util;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,6 +53,44 @@ public final class DateUtil {
      */
     public static String formatDateTime(LocalDateTime dateTime) {
         return dateTime != null ? dateTime.format(DATETIME_FORMATTER) : "";
+    }
+
+    /**
+     * Formate une date en version longue (ex: vendredi 01 janvier 2025)
+     */
+    public static String formatDateLong(LocalDate date) {
+        if (date == null) return "";
+        DateTimeFormatter longFmt = DateTimeFormatter.ofPattern("EEEE dd MMMM yyyy", Locale.FRANCE);
+        return date.format(longFmt);
+    }
+
+    /**
+     * Formate une date + heure fournie séparément
+     */
+    public static String formatDateTime(LocalDate date, LocalTime time) {
+        if (date == null || time == null) return "";
+        return formatDateTime(LocalDateTime.of(date, time));
+    }
+
+    /**
+     * Retourne true si la date est passée (avant aujourd'hui)
+     */
+    public static boolean isPast(LocalDate date) {
+        return date != null && date.isBefore(LocalDate.now());
+    }
+
+    /**
+     * Retourne true si la date est aujourd'hui
+     */
+    public static boolean isToday(LocalDate date) {
+        return date != null && date.equals(LocalDate.now());
+    }
+
+    /**
+     * Wrapper pour compatibilité: retourne true si la date est dans le futur
+     */
+    public static boolean isFuture(LocalDate date) {
+        return isFutureDate(date);
     }
 
     /**

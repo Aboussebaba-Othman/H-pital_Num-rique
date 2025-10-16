@@ -7,327 +7,203 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de Bord Patient - Clinique</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .stat-card {
-            border-left: 4px solid;
-            transition: transform 0.2s;
-        }
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-        .stat-card.primary { border-color: #0d6efd; }
-        .stat-card.warning { border-color: #ffc107; }
-        .stat-card.success { border-color: #198754; }
-        .stat-card.info { border-color: #0dcaf0; }
+        /* small helper */
+        .stat-card:hover { transform: translateY(-6px); }
     </style>
 </head>
 <body>
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="${pageContext.request.contextPath}/patient/dashboard">
-            <i class="fas fa-hospital"></i> Clinique
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link active" href="${pageContext.request.contextPath}/patient/dashboard">
-                        <i class="fas fa-home"></i> Tableau de bord
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="${pageContext.request.contextPath}/patient/docteurs">
-                        <i class="fas fa-user-md"></i> Docteurs
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="${pageContext.request.contextPath}/patient/consultations">
-                        <i class="fas fa-calendar-check"></i> Mes Consultations
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="${pageContext.request.contextPath}/patient/historique">
-                        <i class="fas fa-history"></i> Historique
-                    </a>
-                </li>
-            </ul>
-            <ul class="navbar-nav">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
-                       data-bs-toggle="dropdown">
-                        <i class="fas fa-user"></i> ${patient.prenom} ${patient.nom}
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/logout">
-                            <i class="fas fa-sign-out-alt"></i> Déconnexion
-                        </a></li>
-                    </ul>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
 
-<div class="container mt-4">
-    <!-- En-tête de bienvenue -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h2 class="mb-2">
-                        <i class="fas fa-hand-wave"></i> Bonjour, ${patient.prenom} ${patient.nom}!
-                    </h2>
-                    <p class="mb-0">Bienvenue sur votre espace patient</p>
-                </div>
-            </div>
+<!-- Définir la page active pour la sidebar -->
+<c:set var="pageParam" value="dashboard" scope="request"/>
+
+<!-- Inclure la sidebar patient -->
+<%@ include file="../common/patient-nav.jsp" %>
+
+<!-- Contenu principal adapté Tailwind -->
+<div class="max-w-7xl mx-auto">
+
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl p-6 shadow-lg">
+            <h1 class="text-3xl font-bold">Bonjour, ${patient.prenom} ${patient.nom}!</h1>
+            <p class="text-blue-100">Bienvenue sur votre espace patient</p>
         </div>
     </div>
 
-    <!-- Statistiques -->
-    <div class="row mb-4">
-        <div class="col-md-3 mb-3">
-            <div class="card stat-card primary shadow-sm">
-                <div class="card-body text-center">
-                    <i class="fas fa-calendar-alt fa-3x text-primary mb-2"></i>
-                    <h3 class="mb-0">${totalConsultations}</h3>
-                    <p class="text-muted mb-0">Total Consultations</p>
+    <!-- Statistiques principales -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-xl shadow p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <p class="text-sm text-gray-500 mb-1">Total Consultations</p>
+                    <p class="text-3xl font-bold">${totalConsultations}</p>
+                </div>
+                <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center">
+                    <i class="fas fa-calendar-alt text-blue-600 text-2xl"></i>
                 </div>
             </div>
+            <a href="${pageContext.request.contextPath}/patient/consultations" class="text-sm text-blue-600 hover:underline">Voir mes consultations</a>
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="card stat-card warning shadow-sm">
-                <div class="card-body text-center">
-                    <i class="fas fa-clock fa-3x text-warning mb-2"></i>
-                    <h3 class="mb-0">${consultationsEnAttente.size()}</h3>
-                    <p class="text-muted mb-0">En Attente</p>
+
+        <div class="bg-white rounded-xl shadow p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <p class="text-sm text-gray-500 mb-1">En Attente</p>
+                    <p class="text-3xl font-bold">${consultationsEnAttente.size()}</p>
+                </div>
+                <div class="w-16 h-16 bg-yellow-50 rounded-full flex items-center justify-center">
+                    <i class="fas fa-clock text-yellow-500 text-2xl"></i>
                 </div>
             </div>
+            <a href="${pageContext.request.contextPath}/patient/consultations" class="text-sm text-yellow-600 hover:underline">Gérer</a>
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="card stat-card success shadow-sm">
-                <div class="card-body text-center">
-                    <i class="fas fa-check-circle fa-3x text-success mb-2"></i>
-                    <h3 class="mb-0">${nombreConsultationsTerminees}</h3>
-                    <p class="text-muted mb-0">Terminées</p>
+
+        <div class="bg-white rounded-xl shadow p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <p class="text-sm text-gray-500 mb-1">Terminées</p>
+                    <p class="text-3xl font-bold">${nombreConsultationsTerminees}</p>
+                </div>
+                <div class="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center">
+                    <i class="fas fa-check-circle text-green-600 text-2xl"></i>
                 </div>
             </div>
+            <a href="${pageContext.request.contextPath}/patient/historique" class="text-sm text-green-600 hover:underline">Voir l'historique</a>
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="card stat-card info shadow-sm">
-                <div class="card-body text-center">
-                    <i class="fas fa-heartbeat fa-3x text-info mb-2"></i>
-                    <h3 class="mb-0">
+
+        <div class="bg-white rounded-xl shadow p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <p class="text-sm text-gray-500 mb-1">IMC</p>
+                    <p class="text-3xl font-bold">
                         <c:choose>
                             <c:when test="${not empty patient.poids && not empty patient.taille}">
-                                <fmt:formatNumber value="${patient.poids / ((patient.taille / 100) * (patient.taille / 100))}"
-                                                  maxFractionDigits="1"/>
+                                <fmt:formatNumber value="${patient.poids / ((patient.taille / 100) * (patient.taille / 100))}" maxFractionDigits="1"/>
                             </c:when>
                             <c:otherwise>--</c:otherwise>
                         </c:choose>
-                    </h3>
-                    <p class="text-muted mb-0">IMC</p>
+                    </p>
+                </div>
+                <div class="w-16 h-16 bg-cyan-50 rounded-full flex items-center justify-center">
+                    <i class="fas fa-heartbeat text-cyan-500 text-2xl"></i>
                 </div>
             </div>
+            <p class="text-sm text-gray-500">Indice de masse corporelle</p>
         </div>
     </div>
 
-    <!-- Prochaine Consultation -->
+    <!-- Prochaine consultation -->
     <c:if test="${not empty prochaineConsultation}">
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card shadow">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="mb-0">
-                            <i class="fas fa-calendar-star"></i> Votre Prochaine Consultation
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-8">
-                                <h5 class="mb-3">
-                                    <fmt:formatDate value="${prochaineConsultation.date}" pattern="EEEE dd MMMM yyyy"/>
-                                    à
-                                    <fmt:formatDate value="${prochaineConsultation.heure}" pattern="HH:mm"/>
-                                </h5>
-                                <p class="mb-2">
-                                    <i class="fas fa-user-md text-primary"></i>
-                                    <strong>Docteur:</strong>
-                                    Dr. ${prochaineConsultation.docteur.prenom} ${prochaineConsultation.docteur.nom}
-                                </p>
-                                <p class="mb-2">
-                                    <i class="fas fa-stethoscope text-primary"></i>
-                                    <strong>Spécialité:</strong>
-                                        ${prochaineConsultation.docteur.specialite}
-                                </p>
-                                <p class="mb-0">
-                                    <i class="fas fa-notes-medical text-primary"></i>
-                                    <strong>Motif:</strong>
-                                        ${prochaineConsultation.motifConsultation}
-                                </p>
-                            </div>
-                            <div class="col-md-4 text-end">
-                                    <span class="badge bg-${prochaineConsultation.statut == 'VALIDEE' ? 'success' : 'warning'} fs-6">
-                                            ${prochaineConsultation.statut == 'VALIDEE' ? 'Confirmée' : 'En attente'}
-                                    </span>
-                            </div>
-                        </div>
-                    </div>
+        <div class="bg-white rounded-xl shadow p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fas fa-calendar-star text-indigo-600 mr-2"></i> Prochaine consultation</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                <div>
+                    <p class="text-lg font-semibold">
+                        <fmt:formatDate value="${prochaineConsultation.date}" pattern="EEEE dd MMMM yyyy"/> à <fmt:formatDate value="${prochaineConsultation.heure}" pattern="HH:mm"/>
+                    </p>
+                    <p class="text-sm text-gray-600">Dr. ${prochaineConsultation.docteur.prenom} ${prochaineConsultation.docteur.nom} — ${prochaineConsultation.docteur.specialite}</p>
+                    <p class="text-sm mt-2">${prochaineConsultation.motifConsultation}</p>
+                </div>
+                <div class="md:col-span-2 text-right">
+                    <span class="inline-block px-4 py-2 rounded-full text-sm font-medium ${prochaineConsultation.statut == 'VALIDEE' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                        ${prochaineConsultation.statut == 'VALIDEE' ? 'Confirmée' : 'En attente'}
+                    </span>
                 </div>
             </div>
         </div>
     </c:if>
 
-    <div class="row">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Consultations à venir -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow h-100">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-calendar-alt"></i> Consultations à Venir
-                    </h5>
-                </div>
-                <div class="card-body">
+        <div class="bg-white rounded-xl shadow p-6">
+            <h3 class="text-lg font-bold mb-4"><i class="fas fa-calendar-alt text-indigo-600 mr-2"></i> Consultations à venir</h3>
+            <c:choose>
+                <c:when test="${empty consultationsAvenir}">
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-calendar-times text-3xl mb-3"></i>
+                        <p>Aucune consultation programmée</p>
+                        <a href="${pageContext.request.contextPath}/patient/reserver" class="inline-block mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg">Réserver une consultation</a>
+                    </div>
+                </c:when>
+                <c:otherwise>
+                    <div class="space-y-3">
+                        <c:forEach items="${consultationsAvenir}" var="consultation" varStatus="status">
+                            <c:if test="${status.index < 5}">
+                                <div class="flex items-center justify-between p-4 border rounded-lg">
+                                    <div>
+                                        <div class="font-semibold"><fmt:formatDate value="${consultation.date}" pattern="dd/MM/yyyy"/> — <fmt:formatDate value="${consultation.heure}" pattern="HH:mm"/></div>
+                                        <div class="text-sm text-gray-600">Dr. ${consultation.docteur.prenom} ${consultation.docteur.nom} · ${consultation.docteur.specialite}</div>
+                                    </div>
+                                    <div>
+                                        <span class="px-3 py-1 rounded-full text-sm ${consultation.statut == 'VALIDEE' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">${consultation.statut == 'VALIDEE' ? 'Validée' : 'Réservée'}</span>
+                                    </div>
+                                </div>
+                            </c:if>
+                        </c:forEach>
+                    </div>
+                    <div class="mt-4">
+                        <a href="${pageContext.request.contextPath}/patient/consultations" class="text-indigo-600 hover:underline">Voir toutes les consultations →</a>
+                    </div>
+                </c:otherwise>
+            </c:choose>
+        </div>
+
+        <!-- Actions rapides -->
+        <div class="bg-white rounded-xl shadow p-6">
+            <h3 class="text-lg font-bold mb-4"><i class="fas fa-rocket text-green-600 mr-2"></i> Actions rapides</h3>
+            <div class="grid grid-cols-1 gap-3">
+                <a href="${pageContext.request.contextPath}/patient/reserver" class="px-4 py-3 bg-indigo-600 text-white rounded-lg flex items-center">
+                    <i class="fas fa-calendar-plus mr-3"></i> Réserver une consultation
+                </a>
+                <a href="${pageContext.request.contextPath}/patient/docteurs" class="px-4 py-3 bg-sky-100 text-sky-800 rounded-lg flex items-center">
+                    <i class="fas fa-user-md mr-3"></i> Trouver un docteur
+                </a>
+                <a href="${pageContext.request.contextPath}/patient/consultations" class="px-4 py-3 bg-amber-50 text-amber-800 rounded-lg flex items-center">
+                    <i class="fas fa-list mr-3"></i> Mes consultations
+                </a>
+                <a href="${pageContext.request.contextPath}/patient/historique" class="px-4 py-3 bg-gray-100 text-gray-800 rounded-lg flex items-center">
+                    <i class="fas fa-history mr-3"></i> Historique médical
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informations patient -->
+    <div class="bg-white rounded-xl shadow p-6 mt-6">
+        <h3 class="text-lg font-bold mb-4"><i class="fas fa-user-circle text-gray-700 mr-2"></i> Mes informations</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <p class="text-sm text-gray-600"><strong>Email:</strong> ${patient.email}</p>
+                <p class="text-sm text-gray-600"><strong>Poids:</strong>
                     <c:choose>
-                        <c:when test="${empty consultationsAvenir}">
-                            <div class="text-center py-4">
-                                <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
-                                <p class="text-muted mb-3">Aucune consultation programmée</p>
-                                <a href="${pageContext.request.contextPath}/patient/reserver"
-                                   class="btn btn-primary">
-                                    <i class="fas fa-plus"></i> Réserver une consultation
-                                </a>
-                            </div>
+                        <c:when test="${not empty patient.poids}">
+                            <fmt:formatNumber value="${patient.poids}" maxFractionDigits="1"/> kg
                         </c:when>
-                        <c:otherwise>
-                            <div class="list-group list-group-flush">
-                                <c:forEach items="${consultationsAvenir}" var="consultation" varStatus="status">
-                                    <c:if test="${status.index < 5}">
-                                        <div class="list-group-item">
-                                            <div class="d-flex justify-content-between align-items-start">
-                                                <div>
-                                                    <h6 class="mb-1">
-                                                        <fmt:formatDate value="${consultation.date}" pattern="dd/MM/yyyy"/>
-                                                        à
-                                                        <fmt:formatDate value="${consultation.heure}" pattern="HH:mm"/>
-                                                    </h6>
-                                                    <p class="mb-1 small">
-                                                        Dr. ${consultation.docteur.prenom} ${consultation.docteur.nom}
-                                                    </p>
-                                                    <p class="mb-0 text-muted small">
-                                                            ${consultation.docteur.specialite}
-                                                    </p>
-                                                </div>
-                                                <span class="badge bg-${consultation.statut == 'VALIDEE' ? 'success' : 'warning'}">
-                                                        ${consultation.statut == 'VALIDEE' ? 'Validée' : 'Réservée'}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </c:if>
-                                </c:forEach>
-                            </div>
-                            <div class="card-footer bg-transparent">
-                                <a href="${pageContext.request.contextPath}/patient/consultations"
-                                   class="text-decoration-none">
-                                    Voir toutes les consultations <i class="fas fa-arrow-right"></i>
-                                </a>
-                            </div>
-                        </c:otherwise>
+                        <c:otherwise>Non renseigné</c:otherwise>
                     </c:choose>
-                </div>
+                </p>
             </div>
-        </div>
-
-        <!-- Actions Rapides -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow h-100">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-rocket"></i> Actions Rapides
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-3">
-                        <a href="${pageContext.request.contextPath}/patient/reserver"
-                           class="btn btn-lg btn-outline-primary text-start">
-                            <i class="fas fa-calendar-plus me-2"></i>
-                            Réserver une consultation
-                        </a>
-                        <a href="${pageContext.request.contextPath}/patient/docteurs"
-                           class="btn btn-lg btn-outline-info text-start">
-                            <i class="fas fa-user-md me-2"></i>
-                            Trouver un docteur
-                        </a>
-                        <a href="${pageContext.request.contextPath}/patient/consultations"
-                           class="btn btn-lg btn-outline-warning text-start">
-                            <i class="fas fa-list me-2"></i>
-                            Mes consultations
-                        </a>
-                        <a href="${pageContext.request.contextPath}/patient/historique"
-                           class="btn btn-lg btn-outline-secondary text-start">
-                            <i class="fas fa-history me-2"></i>
-                            Historique médical
-                        </a>
-                    </div>
-                </div>
+            <div>
+                <p class="text-sm text-gray-600"><strong>ID Patient:</strong> #${patient.idPatient}</p>
+                <p class="text-sm text-gray-600"><strong>Taille:</strong>
+                    <c:choose>
+                        <c:when test="${not empty patient.taille}">
+                            <fmt:formatNumber value="${patient.taille}" maxFractionDigits="0"/> cm
+                        </c:when>
+                        <c:otherwise>Non renseignée</c:otherwise>
+                    </c:choose>
+                </p>
             </div>
         </div>
     </div>
 
-    <!-- Informations Patient -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-user-circle"></i> Mes Informations
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p class="mb-2">
-                                <i class="fas fa-envelope text-primary"></i>
-                                <strong>Email:</strong> ${patient.email}
-                            </p>
-                            <p class="mb-2">
-                                <i class="fas fa-weight text-primary"></i>
-                                <strong>Poids:</strong>
-                                <c:choose>
-                                    <c:when test="${not empty patient.poids}">
-                                        <fmt:formatNumber value="${patient.poids}" maxFractionDigits="1"/> kg
-                                    </c:when>
-                                    <c:otherwise>Non renseigné</c:otherwise>
-                                </c:choose>
-                            </p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="mb-2">
-                                <i class="fas fa-id-card text-primary"></i>
-                                <strong>ID Patient:</strong> #${patient.idPatient}
-                            </p>
-                            <p class="mb-2">
-                                <i class="fas fa-ruler-vertical text-primary"></i>
-                                <strong>Taille:</strong>
-                                <c:choose>
-                                    <c:when test="${not empty patient.taille}">
-                                        <fmt:formatNumber value="${patient.taille}" maxFractionDigits="0"/> cm
-                                    </c:when>
-                                    <c:otherwise>Non renseignée</c:otherwise>
-                                </c:choose>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</main>
+</div>
+
 </body>
 </html>

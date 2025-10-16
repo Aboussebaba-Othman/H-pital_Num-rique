@@ -5,7 +5,9 @@ import com.othman.clinique.model.*;
 import com.othman.clinique.repository.Interfaces.*;
 import com.othman.clinique.repository.impl.*;
 import com.othman.clinique.util.DateUtil;
+import com.othman.clinique.util.JPAUtil;
 import com.othman.clinique.util.ValidationUtil;
+import jakarta.persistence.EntityManager;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -33,6 +35,7 @@ public class ConsultationService {
     public Consultation reserverConsultation(Long patientId, Long docteurId,
                                              LocalDate date, LocalTime heure,
                                              String motif) {
+        EntityManager em = null;
         try {
             // 1. Validation des données d'entrée
             validateReservationInput(patientId, docteurId, date, heure, motif);
@@ -57,7 +60,24 @@ public class ConsultationService {
             // 5. Trouver une salle disponible pour ce créneau
             Salle salleDisponible = findSalleDisponible(dateTime);
 
-            // 6. Créer la consultation
+            // 6. TRANSACTION UNIQUE pour garantir la cohérence
+            em = JPAUtil.getEntityManager();
+            em.getTransaction().begin();
+
+            // Recharger la salle dans le contexte de persistance actuel
+            Salle salleManaged = em.find(Salle.class, salleDisponible.getIdSalle());
+
+            // Vérifier à nouveau la disponibilité (double-check dans la transaction)
+            if (!salleManaged.isDisponible(dateTime)) {
+                em.getTransaction().rollback();
+                throw new SalleNonDisponibleException(
+                        "La salle n'est plus disponible pour ce créneau");
+            }
+
+            // Réserver le créneau AVANT de sauvegarder la consultation
+            salleManaged.reserverCreneau(dateTime);
+
+            // Créer et persister la consultation
             Consultation consultation = new Consultation();
             consultation.setDate(date);
             consultation.setHeure(heure);
@@ -65,29 +85,38 @@ public class ConsultationService {
             consultation.setStatut(StatutConsultation.RESERVEE);
             consultation.setPatient(patient);
             consultation.setDocteur(docteur);
-            consultation.setSalle(salleDisponible);
+            consultation.setSalle(salleManaged);
 
-            // 7. Sauvegarder
-            Consultation saved = consultationRepository.save(consultation);
+            em.persist(consultation);
 
-            salleDisponible.reserverCreneau(dateTime);
-            salleRepository.update(salleDisponible);
+            // Commit de la transaction
+            em.getTransaction().commit();
 
-            LOGGER.info("Consultation réservée - ID: " + saved.getIdConsultation() +
-                    ", Patient: " + patientId + ", Docteur: " + docteurId);
+            LOGGER.info("Consultation réservée - ID: " + consultation.getIdConsultation() +
+                    ", Patient: " + patientId + ", Docteur: " + docteurId +
+                    ", Salle: " + salleManaged.getNomSalle());
 
-            return saved;
+            return consultation;
 
         } catch (ValidationException | EntityNotFoundException |
                  CreneauOccupeException | SalleNonDisponibleException e) {
+            if (em != null && em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
             LOGGER.warning("Échec réservation: " + e.getMessage());
             throw e;
         } catch (Exception e) {
+            if (em != null && em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
             LOGGER.log(Level.SEVERE, "Erreur lors de la réservation", e);
             throw new RuntimeException("Erreur système lors de la réservation", e);
+        } finally {
+            if (em != null && em.isOpen()) {
+                em.close();
+            }
         }
     }
-
     private Salle findSalleDisponible(LocalDateTime dateTime) {
         List<Salle> sallesDisponibles = salleRepository.findSallesDisponibles(dateTime);
 
@@ -143,6 +172,7 @@ public class ConsultationService {
         }
     }
     public Consultation refuserConsultation(Long consultationId, Long docteurId, String motifRefus) {
+        EntityManager em = null;
         try {
             Consultation consultation = getConsultationById(consultationId);
 
@@ -156,30 +186,50 @@ public class ConsultationService {
                         "Seules les consultations réservées peuvent être refusées");
             }
 
-            consultation.setStatut(StatutConsultation.ANNULEE);
-            consultation.setCompteRendu("REFUSÉE - Motif: " +
+            // Transaction unique pour consultation + salle
+            em = JPAUtil.getEntityManager();
+            em.getTransaction().begin();
+
+            // Recharger la consultation dans le contexte
+            Consultation consultationManaged = em.find(Consultation.class, consultationId);
+
+            // Récupérer la salle et libérer le créneau
+            Salle salleManaged = consultationManaged.getSalle();
+            LocalDateTime dateTime = consultationManaged.getDateTimeDebut();
+            salleManaged.libererCreneau(dateTime);
+
+            // Mettre à jour la consultation
+            consultationManaged.setStatut(StatutConsultation.ANNULEE);
+            consultationManaged.setCompteRendu("REFUSÉE - Motif: " +
                     (ValidationUtil.isNullOrEmpty(motifRefus) ? "Non spécifié" : motifRefus));
 
-            Consultation updated = consultationRepository.update(consultation);
-
-            LocalDateTime dateTime = consultation.getDateTimeDebut();
-            Salle salle = consultation.getSalle();
-            salle.libererCreneau(dateTime);
-            salleRepository.update(salle);
+            em.getTransaction().commit();
 
             LOGGER.info("Consultation refusée - ID: " + consultationId);
 
-            return updated;
+            return consultationManaged;
 
         } catch (ValidationException | EntityNotFoundException e) {
+            if (em != null && em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
             LOGGER.warning("Échec refus: " + e.getMessage());
             throw e;
         } catch (Exception e) {
+            if (em != null && em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
             LOGGER.log(Level.SEVERE, "Erreur lors du refus", e);
             throw new RuntimeException("Erreur système lors du refus", e);
+        } finally {
+            if (em != null && em.isOpen()) {
+                em.close();
+            }
         }
     }
+
     public Consultation annulerConsultation(Long consultationId, Long userId, Role userRole) {
+        EntityManager em = null;
         try {
             Consultation consultation = getConsultationById(consultationId);
 
@@ -211,27 +261,44 @@ public class ConsultationService {
                 }
             }
 
-            // Annuler
-            consultation.setStatut(StatutConsultation.ANNULEE);
-            Consultation updated = consultationRepository.update(consultation);
+            // Transaction unique pour consultation + salle
+            em = JPAUtil.getEntityManager();
+            em.getTransaction().begin();
 
-            // Libérer le créneau dans la salle
-            LocalDateTime dateTime = consultation.getDateTimeDebut();
-            Salle salle = consultation.getSalle();
-            salle.libererCreneau(dateTime);
-            salleRepository.update(salle);
+            // Recharger la consultation dans le contexte
+            Consultation consultationManaged = em.find(Consultation.class, consultationId);
+
+            // Récupérer la salle et libérer le créneau
+            Salle salleManaged = consultationManaged.getSalle();
+            LocalDateTime dateTime = consultationManaged.getDateTimeDebut();
+            salleManaged.libererCreneau(dateTime);
+
+            // Mettre à jour la consultation
+            consultationManaged.setStatut(StatutConsultation.ANNULEE);
+
+            em.getTransaction().commit();
 
             LOGGER.info("Consultation annulée - ID: " + consultationId +
                     ", Par: " + userRole);
 
-            return updated;
+            return consultationManaged;
 
         } catch (ValidationException | EntityNotFoundException e) {
+            if (em != null && em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
             LOGGER.warning("Échec annulation: " + e.getMessage());
             throw e;
         } catch (Exception e) {
+            if (em != null && em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
             LOGGER.log(Level.SEVERE, "Erreur lors de l'annulation", e);
             throw new RuntimeException("Erreur système lors de l'annulation", e);
+        } finally {
+            if (em != null && em.isOpen()) {
+                em.close();
+            }
         }
     }
     public Consultation terminerConsultation(Long consultationId, Long docteurId, String compteRendu) {

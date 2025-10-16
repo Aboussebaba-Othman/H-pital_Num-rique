@@ -5,15 +5,18 @@ import com.othman.clinique.model.StatutConsultation;
 import com.othman.clinique.repository.Interfaces.ISalleRepository;
 import com.othman.clinique.util.JPAUtil;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class SalleRepositoryImpl implements ISalleRepository {
     private static final Logger LOGGER = Logger.getLogger(SalleRepositoryImpl.class.getName());
@@ -52,29 +55,38 @@ public class SalleRepositoryImpl implements ISalleRepository {
     }
 
     @Override
-    public List<Salle> findSallesDisponibles(LocalDateTime dateHeure) {
+    public List<Salle> findSallesDisponibles(LocalDateTime dateTime) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            LocalDate date = dateHeure.toLocalDate();
+            // Charger toutes les salles avec leurs créneaux
+            String jpql = "SELECT DISTINCT s FROM Salle s " +
+                    "LEFT JOIN FETCH s.creneauxOccupes";
 
-            // Trouver les salles qui n'ont PAS de consultation à ce créneau
-            return em.createQuery(
-                            "SELECT s FROM Salle s " +
-                                    "WHERE s.id NOT IN (" +
-                                    "  SELECT c.salle.id FROM Consultation c " +
-                                    "  WHERE c.date = :date " +
-                                    "  AND c.heure = :heure " +
-                                    "  AND c.statut != :annulee" +
-                                    ") " +
-                                    "ORDER BY s.nomSalle",
-                            Salle.class
-                    )
-                    .setParameter("date", date)
-                    .setParameter("heure", dateHeure.toLocalTime())
-                    .setParameter("annulee", StatutConsultation.ANNULEE)
+            List<Salle> salles = em.createQuery(jpql, Salle.class)
                     .getResultList();
+
+            // Filtrer celles qui sont disponibles pour ce créneau
+            List<Salle> sallesDisponibles = salles.stream()
+                    .filter(s -> {
+                        // Initialiser la liste si elle est null
+                        if (s.getCreneauxOccupes() == null) {
+                            s.setCreneauxOccupes(new ArrayList<>());
+                        }
+                        // Vérifier la disponibilité
+                        return s.isDisponible(dateTime);
+                    })
+                    .collect(Collectors.toList());
+
+            LOGGER.info("Salles disponibles pour " + dateTime + ": " +
+                    sallesDisponibles.size() + "/" + salles.size());
+
+            return sallesDisponibles;
+
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Erreur lors de la recherche des salles disponibles", e);
+            throw new RuntimeException("Erreur lors de la recherche des salles disponibles", e);
         } finally {
-            JPAUtil.close(em);
+            em.close();
         }
     }
 
@@ -135,29 +147,76 @@ public class SalleRepositoryImpl implements ISalleRepository {
 
     @Override
     public Salle update(Salle salle) {
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = null;
+        EntityTransaction transaction = null;
+
         try {
-            em.getTransaction().begin();
-            Salle updated = em.merge(salle);
-            em.getTransaction().commit();
-            LOGGER.info("Salle mise à jour - ID: " + salle.getIdSalle());
-            return updated;
+            em = JPAUtil.getEntityManagerFactory().createEntityManager();
+            transaction = em.getTransaction();
+            transaction.begin();
+
+            // IMPORTANT: Merger la salle et ses collections
+            Salle merged = em.merge(salle);
+
+            // Forcer la synchronisation avec la base de données
+            em.flush();
+
+            transaction.commit();
+
+            LOGGER.info("Salle mise à jour - ID: " + salle.getIdSalle() +
+                    ", Créneaux occupés: " +
+                    (salle.getCreneauxOccupes() != null ? salle.getCreneauxOccupes().size() : 0));
+
+            return merged;
+
         } catch (Exception e) {
-            handleTransactionException(em, "Erreur mise à jour salle", e);
-            throw new RuntimeException("Impossible de mettre à jour la salle", e);
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
+            }
+            LOGGER.log(Level.SEVERE, "Erreur lors de la mise à jour de la salle", e);
+            throw new RuntimeException("Erreur lors de la mise à jour de la salle", e);
         } finally {
-            JPAUtil.close(em);
+            if (em != null && em.isOpen()) {
+                em.close();
+            }
         }
     }
+
 
     @Override
     public Optional<Salle> findById(Long id) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            Salle salle = em.find(Salle.class, id);
-            return Optional.ofNullable(salle);
+            // Charger la salle avec ses créneaux (EAGER)
+            String jpql = "SELECT s FROM Salle s " +
+                    "LEFT JOIN FETCH s.creneauxOccupes " +
+                    "WHERE s.idSalle = :id";
+
+            List<Salle> results = em.createQuery(jpql, Salle.class)
+                    .setParameter("id", id)
+                    .getResultList();
+
+            if (results.isEmpty()) {
+                return Optional.empty();
+            }
+
+            Salle salle = results.get(0);
+
+            // Initialiser la liste si elle est null
+            if (salle.getCreneauxOccupes() == null) {
+                salle.setCreneauxOccupes(new ArrayList<>());
+            }
+
+            LOGGER.info("Salle chargée: " + salle.getNomSalle() +
+                    ", créneaux: " + salle.getCreneauxOccupes().size());
+
+            return Optional.of(salle);
+
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Erreur lors du chargement de la salle " + id, e);
+            return Optional.empty();
         } finally {
-            JPAUtil.close(em);
+            em.close();
         }
     }
 

@@ -20,8 +20,13 @@ public class ConsultationRepositoryImpl implements IConsultationRepository {
     public List<Consultation> findByPatientId(Long patientId) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
+            // EAGER FETCH pour charger toutes les relations
             return em.createQuery(
-                            "SELECT c FROM Consultation c " +
+                            "SELECT DISTINCT c FROM Consultation c " +
+                                    "LEFT JOIN FETCH c.patient " +
+                                    "LEFT JOIN FETCH c.docteur d " +
+                                    "LEFT JOIN FETCH d.departement " +
+                                    "LEFT JOIN FETCH c.salle " +
                                     "WHERE c.patient.id = :patientId " +
                                     "ORDER BY c.date DESC, c.heure DESC",
                             Consultation.class
@@ -37,8 +42,12 @@ public class ConsultationRepositoryImpl implements IConsultationRepository {
     public List<Consultation> findByDocteurId(Long docteurId) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
+            // EAGER FETCH
             return em.createQuery(
-                            "SELECT c FROM Consultation c " +
+                            "SELECT DISTINCT c FROM Consultation c " +
+                                    "LEFT JOIN FETCH c.patient " +
+                                    "LEFT JOIN FETCH c.docteur " +
+                                    "LEFT JOIN FETCH c.salle " +
                                     "WHERE c.docteur.id = :docteurId " +
                                     "ORDER BY c.date, c.heure",
                             Consultation.class
@@ -55,7 +64,10 @@ public class ConsultationRepositoryImpl implements IConsultationRepository {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             return em.createQuery(
-                            "SELECT c FROM Consultation c " +
+                            "SELECT DISTINCT c FROM Consultation c " +
+                                    "LEFT JOIN FETCH c.patient " +
+                                    "LEFT JOIN FETCH c.docteur " +
+                                    "LEFT JOIN FETCH c.salle " +
                                     "WHERE c.salle.id = :salleId " +
                                     "ORDER BY c.date, c.heure",
                             Consultation.class
@@ -72,7 +84,10 @@ public class ConsultationRepositoryImpl implements IConsultationRepository {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             return em.createQuery(
-                            "SELECT c FROM Consultation c " +
+                            "SELECT DISTINCT c FROM Consultation c " +
+                                    "LEFT JOIN FETCH c.patient " +
+                                    "LEFT JOIN FETCH c.docteur " +
+                                    "LEFT JOIN FETCH c.salle " +
                                     "WHERE c.statut = :statut " +
                                     "ORDER BY c.date, c.heure",
                             Consultation.class
@@ -89,7 +104,10 @@ public class ConsultationRepositoryImpl implements IConsultationRepository {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             return em.createQuery(
-                            "SELECT c FROM Consultation c " +
+                            "SELECT DISTINCT c FROM Consultation c " +
+                                    "LEFT JOIN FETCH c.patient " +
+                                    "LEFT JOIN FETCH c.docteur " +
+                                    "LEFT JOIN FETCH c.salle " +
                                     "WHERE c.date = :date " +
                                     "ORDER BY c.heure",
                             Consultation.class
@@ -106,7 +124,10 @@ public class ConsultationRepositoryImpl implements IConsultationRepository {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             return em.createQuery(
-                            "SELECT c FROM Consultation c " +
+                            "SELECT DISTINCT c FROM Consultation c " +
+                                    "LEFT JOIN FETCH c.patient " +
+                                    "LEFT JOIN FETCH c.docteur " +
+                                    "LEFT JOIN FETCH c.salle " +
                                     "WHERE c.date BETWEEN :debut AND :fin " +
                                     "ORDER BY c.date, c.heure",
                             Consultation.class
@@ -153,7 +174,10 @@ public class ConsultationRepositoryImpl implements IConsultationRepository {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             return em.createQuery(
-                            "SELECT c FROM Consultation c " +
+                            "SELECT DISTINCT c FROM Consultation c " +
+                                    "LEFT JOIN FETCH c.patient " +
+                                    "LEFT JOIN FETCH c.docteur " +
+                                    "LEFT JOIN FETCH c.salle " +
                                     "WHERE c.docteur.id = :docteurId " +
                                     "AND c.date = :date " +
                                     "ORDER BY c.heure",
@@ -172,7 +196,10 @@ public class ConsultationRepositoryImpl implements IConsultationRepository {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             return em.createQuery(
-                            "SELECT c FROM Consultation c " +
+                            "SELECT DISTINCT c FROM Consultation c " +
+                                    "LEFT JOIN FETCH c.patient " +
+                                    "LEFT JOIN FETCH c.docteur " +
+                                    "LEFT JOIN FETCH c.salle " +
                                     "WHERE c.salle.id = :salleId " +
                                     "AND c.date = :date " +
                                     "ORDER BY c.heure",
@@ -191,8 +218,11 @@ public class ConsultationRepositoryImpl implements IConsultationRepository {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             return em.createQuery(
-                            "SELECT c FROM Consultation c " +
-                                    "LEFT JOIN FETCH c.docteur " +
+                            "SELECT DISTINCT c FROM Consultation c " +
+                                    "LEFT JOIN FETCH c.patient " +
+                                    "LEFT JOIN FETCH c.docteur d " +
+                                    "LEFT JOIN FETCH d.departement " +
+                                    "LEFT JOIN FETCH c.salle " +
                                     "WHERE c.patient.id = :patientId " +
                                     "AND c.statut = :terminee " +
                                     "ORDER BY c.date DESC, c.heure DESC",
@@ -211,8 +241,9 @@ public class ConsultationRepositoryImpl implements IConsultationRepository {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             return em.createQuery(
-                            "SELECT c FROM Consultation c " +
+                            "SELECT DISTINCT c FROM Consultation c " +
                                     "LEFT JOIN FETCH c.patient " +
+                                    "LEFT JOIN FETCH c.docteur " +
                                     "LEFT JOIN FETCH c.salle " +
                                     "WHERE c.docteur.id = :docteurId " +
                                     "AND c.date >= :today " +
@@ -268,8 +299,20 @@ public class ConsultationRepositoryImpl implements IConsultationRepository {
     public Optional<Consultation> findById(Long id) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            Consultation consultation = em.find(Consultation.class, id);
-            return Optional.ofNullable(consultation);
+            // EAGER FETCH pour charger toutes les relations
+            List<Consultation> results = em.createQuery(
+                            "SELECT DISTINCT c FROM Consultation c " +
+                                    "LEFT JOIN FETCH c.patient " +
+                                    "LEFT JOIN FETCH c.docteur d " +
+                                    "LEFT JOIN FETCH d.departement " +
+                                    "LEFT JOIN FETCH c.salle " +
+                                    "WHERE c.idConsultation = :id",
+                            Consultation.class
+                    )
+                    .setParameter("id", id)
+                    .getResultList();
+
+            return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
         } finally {
             JPAUtil.close(em);
         }
@@ -280,7 +323,10 @@ public class ConsultationRepositoryImpl implements IConsultationRepository {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             return em.createQuery(
-                    "SELECT c FROM Consultation c " +
+                    "SELECT DISTINCT c FROM Consultation c " +
+                            "LEFT JOIN FETCH c.patient " +
+                            "LEFT JOIN FETCH c.docteur " +
+                            "LEFT JOIN FETCH c.salle " +
                             "ORDER BY c.date DESC, c.heure DESC",
                     Consultation.class
             ).getResultList();
