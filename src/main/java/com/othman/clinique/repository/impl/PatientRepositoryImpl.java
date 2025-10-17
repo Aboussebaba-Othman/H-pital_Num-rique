@@ -4,7 +4,6 @@ import com.othman.clinique.model.Patient;
 import com.othman.clinique.repository.Interfaces.IPatientRepository;
 import com.othman.clinique.util.JPAUtil;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
 
 import java.util.List;
@@ -19,8 +18,6 @@ public class PatientRepositoryImpl implements IPatientRepository {
     public Optional<Patient> findByEmail(String email) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            // NE PAS charger les consultations lors du login !
-            // Elles seront chargées plus tard si nécessaire
             List<Patient> results = em.createQuery(
                             "SELECT p FROM Patient p " +
                                     "WHERE p.email = :email",
@@ -113,6 +110,14 @@ public class PatientRepositoryImpl implements IPatientRepository {
     public Patient update(Patient patient) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
+            if (patient.getMotDePasse() == null || patient.getMotDePasse().trim().isEmpty()) {
+                Patient existing = em.find(Patient.class, patient.getId());
+                if (existing != null && existing.getMotDePasse() != null) {
+                    patient.setMotDePasse(existing.getMotDePasse());
+                    LOGGER.info("[DEBUG] Preserving existing motDePasse for patient id=" + patient.getId());
+                }
+            }
+
             em.getTransaction().begin();
             Patient updated = em.merge(patient);
             em.getTransaction().commit();
@@ -133,7 +138,6 @@ public class PatientRepositoryImpl implements IPatientRepository {
     public Optional<Patient> findById(Long id) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            // Simple findById sans FETCH (pour éviter de charger trop de données)
             Patient patient = em.find(Patient.class, id);
             return Optional.ofNullable(patient);
         } finally {
@@ -145,7 +149,6 @@ public class PatientRepositoryImpl implements IPatientRepository {
     public List<Patient> findAll() {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            // Pas de FETCH ici car on liste juste les patients
             return em.createQuery("SELECT p FROM Patient p ORDER BY p.nom, p.prenom", Patient.class)
                     .getResultList();
         } finally {

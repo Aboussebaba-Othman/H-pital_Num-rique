@@ -21,13 +21,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-/**
- * Dashboard Docteur
- * Affiche le planning et les consultations en attente
- *
- * @author Othman
- * @version 1.0
- */
 @WebServlet(name = "DocteurDashboardServlet", urlPatterns = {"/docteur/dashboard"})
 public class DocteurDashboardServlet extends HttpServlet {
 
@@ -59,42 +52,51 @@ public class DocteurDashboardServlet extends HttpServlet {
             Long docteurId = docteur.getIdDocteur();
 
             // Récupérer le planning complet
-            List<Consultation> planningComplet = consultationService.getPlanningDocteur(docteurId);
-
-            // Consultations du jour
-            LocalDate aujourdhui = LocalDate.now();
-            List<Consultation> consultationsDuJour = planningComplet.stream()
-                    .filter(c -> c.getDate().equals(aujourdhui))
-                    .sorted((c1, c2) -> c1.getHeure().compareTo(c2.getHeure()))
-                    .collect(Collectors.toList());
+            List<Consultation> planning = consultationService.getPlanningDocteur(docteurId);
 
             // Consultations en attente de validation
-            List<Consultation> consultationsEnAttente = planningComplet.stream()
+            List<Consultation> consultationsEnAttente = planning.stream()
                     .filter(c -> c.getStatut() == StatutConsultation.RESERVEE)
-                    .sorted((c1, c2) -> {
-                        int dateComp = c1.getDate().compareTo(c2.getDate());
-                        return dateComp != 0 ? dateComp : c1.getHeure().compareTo(c2.getHeure());
-                    })
+                    .sorted(Comparator.comparing(Consultation::getDate)
+                            .thenComparing(Consultation::getHeure))
+                    .collect(Collectors.toList());
+
+            // Consultations d'aujourd'hui
+            LocalDate aujourdhui = LocalDate.now();
+            List<Consultation> consultationsAujourdhui = planning.stream()
+                    .filter(c -> c.getDate().equals(aujourdhui))
+                    .filter(c -> c.getStatut() == StatutConsultation.VALIDEE ||
+                            c.getStatut() == StatutConsultation.RESERVEE)
+                    .sorted(Comparator.comparing(Consultation::getHeure))
                     .collect(Collectors.toList());
 
             // Consultations validées à venir
-            List<Consultation> consultationsValidees = planningComplet.stream()
+            List<Consultation> consultationsValidees = planning.stream()
                     .filter(c -> c.getStatut() == StatutConsultation.VALIDEE)
-                    .sorted(Comparator.comparing(Consultation::getDate).thenComparing(Consultation::getHeure))
+                    .filter(c -> c.getDate().isAfter(aujourdhui) ||
+                            c.getDate().equals(aujourdhui))
+                    .sorted(Comparator.comparing(Consultation::getDate)
+                            .thenComparing(Consultation::getHeure))
                     .collect(Collectors.toList());
+
+            // Statistiques
+            long totalConsultations = planning.size();
+            long consultationsTerminees = planning.stream()
+                    .filter(c -> c.getStatut() == StatutConsultation.TERMINEE)
+                    .count();
 
             // Prochaine consultation
             Consultation prochaineConsultation = consultationsValidees.isEmpty()
                     ? null
                     : consultationsValidees.get(0);
 
-            // Statistiques
-            request.setAttribute("totalConsultations", planningComplet.size());
-            request.setAttribute("consultationsDuJour", consultationsDuJour);
-            request.setAttribute("consultationsEnAttente", consultationsEnAttente);
-            request.setAttribute("consultationsValidees", consultationsValidees);
-            request.setAttribute("prochaineConsultation", prochaineConsultation);
             request.setAttribute("docteur", docteur);
+            request.setAttribute("totalConsultations", totalConsultations);
+            request.setAttribute("consultationsEnAttente", consultationsEnAttente);
+            request.setAttribute("consultationsAujourdhui", consultationsAujourdhui);
+            request.setAttribute("consultationsValidees", consultationsValidees);
+            request.setAttribute("consultationsTerminees", consultationsTerminees);
+            request.setAttribute("prochaineConsultation", prochaineConsultation);
 
             LOGGER.info("Dashboard chargé pour docteur ID: " + docteurId);
 

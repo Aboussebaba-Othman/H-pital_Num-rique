@@ -13,7 +13,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -45,9 +44,9 @@ public class HistoriquePatientServlet extends HttpServlet {
         }
 
         try {
-            Long patientId = patient.getIdPatient();
+            Long patientId = patient.getId();
 
-            // Récupérer l'historique complet
+            // Récupérer l'historique complet (avec FETCH joins)
             List<Consultation> historique = consultationService.getHistoriquePatient(patientId);
 
             // Paramètres de filtrage
@@ -56,20 +55,30 @@ public class HistoriquePatientServlet extends HttpServlet {
 
             // Filtrer par année si spécifié
             if (anneeStr != null && !anneeStr.isEmpty()) {
-                int annee = Integer.parseInt(anneeStr);
-                historique = historique.stream()
-                        .filter(c -> c.getDate().getYear() == annee)
-                        .collect(Collectors.toList());
-                request.setAttribute("anneeFiltre", annee);
+                try {
+                    int annee = Integer.parseInt(anneeStr);
+                    historique = historique.stream()
+                            .filter(c -> c.getDate() != null && c.getDate().getYear() == annee)
+                            .collect(Collectors.toList());
+                    request.setAttribute("anneeFiltre", annee);
+                } catch (NumberFormatException e) {
+                    LOGGER.warning("Année invalide: " + anneeStr);
+                }
             }
 
             // Filtrer par docteur si spécifié
             if (docteurIdStr != null && !docteurIdStr.isEmpty()) {
-                Long docteurId = Long.parseLong(docteurIdStr);
-                historique = historique.stream()
-                        .filter(c -> c.getDocteur().getIdDocteur().equals(docteurId))
-                        .collect(Collectors.toList());
-                request.setAttribute("docteurIdFiltre", docteurId);
+                try {
+                    Long docteurId = Long.parseLong(docteurIdStr);
+                    historique = historique.stream()
+                            .filter(c -> c.getDocteur() != null &&
+                                    c.getDocteur().getIdDocteur() != null &&
+                                    c.getDocteur().getIdDocteur().equals(docteurId))
+                            .collect(Collectors.toList());
+                    request.setAttribute("docteurIdFiltre", docteurId);
+                } catch (NumberFormatException e) {
+                    LOGGER.warning("ID docteur invalide: " + docteurIdStr);
+                }
             }
 
             // Statistiques
@@ -83,7 +92,9 @@ public class HistoriquePatientServlet extends HttpServlet {
 
             // Années disponibles pour le filtre
             List<Integer> anneesDisponibles = historique.stream()
-                    .map(c -> c.getDate().getYear())
+                    .map(c -> c.getDate())
+                    .filter(date -> date != null)
+                    .map(date -> date.getYear())
                     .distinct()
                     .sorted((a, b) -> b - a)
                     .collect(Collectors.toList());

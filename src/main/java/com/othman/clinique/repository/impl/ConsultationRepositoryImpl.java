@@ -20,7 +20,6 @@ public class ConsultationRepositoryImpl implements IConsultationRepository {
     public List<Consultation> findByPatientId(Long patientId) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            // EAGER FETCH pour charger toutes les relations
             return em.createQuery(
                             "SELECT DISTINCT c FROM Consultation c " +
                                     "LEFT JOIN FETCH c.patient " +
@@ -224,18 +223,14 @@ public class ConsultationRepositoryImpl implements IConsultationRepository {
                                     "LEFT JOIN FETCH d.departement " +
                                     "LEFT JOIN FETCH c.salle " +
                                     "WHERE c.patient.id = :patientId " +
-                                    "AND c.statut = :terminee " +
                                     "ORDER BY c.date DESC, c.heure DESC",
-                            Consultation.class
-                    )
+                            Consultation.class)
                     .setParameter("patientId", patientId)
-                    .setParameter("terminee", StatutConsultation.TERMINEE)
                     .getResultList();
         } finally {
             JPAUtil.close(em);
         }
     }
-
     @Override
     public List<Consultation> findPlanningDocteur(Long docteurId) {
         EntityManager em = JPAUtil.getEntityManager();
@@ -299,7 +294,6 @@ public class ConsultationRepositoryImpl implements IConsultationRepository {
     public Optional<Consultation> findById(Long id) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            // EAGER FETCH pour charger toutes les relations
             List<Consultation> results = em.createQuery(
                             "SELECT DISTINCT c FROM Consultation c " +
                                     "LEFT JOIN FETCH c.patient " +

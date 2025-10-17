@@ -4,8 +4,9 @@ import com.othman.clinique.model.Consultation;
 import com.othman.clinique.model.Patient;
 import com.othman.clinique.model.StatutConsultation;
 import com.othman.clinique.service.ConsultationService;
-import com.othman.clinique.service.PatientService;
 
+import com.othman.clinique.util.JPAUtil;
+import jakarta.persistence.EntityManager;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -14,12 +15,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 @WebServlet(name = "PatientDashboardServlet", urlPatterns = {"/patient/dashboard"})
 public class PatientDashboardServlet extends HttpServlet {
@@ -31,7 +29,6 @@ public class PatientDashboardServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         this.consultationService = new ConsultationService();
-        PatientService patientService = new PatientService();
         LOGGER.info("PatientDashboardServlet initialisé");
     }
 
@@ -39,7 +36,13 @@ public class PatientDashboardServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        HttpSession session = request.getSession();
+        HttpSession session = request.getSession(false);
+
+        if (session == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
         Patient patient = (Patient) session.getAttribute("userConnecte");
 
         if (patient == null) {
@@ -48,44 +51,54 @@ public class PatientDashboardServlet extends HttpServlet {
         }
 
         try {
-            Long patientId = patient.getIdPatient();
+            Long patientId = patient.getId();
+            
+            // Récupérer les statistiques simples
+            List<Consultation> toutesConsultations;
+            EntityManager em = JPAUtil.getEntityManager();
+            try {
+                toutesConsultations = em.createQuery(
+                        "SELECT c FROM Consultation c WHERE c.patient.id = :patientId",
+                        Consultation.class)
+                    .setParameter("patientId", patientId)
+                    .getResultList();
+            } finally {
+                em.close();
+            }
 
-            List<Consultation> toutesConsultations = consultationService.getConsultationsByPatient(patientId);
+            // Récupérer la prochaine consultation AVEC les détails
+            Consultation prochaineConsultation = consultationService.getProchaineConsultationWithDetails(patientId);
 
-            List<Consultation> consultationsAvenir = toutesConsultations.stream()
-                    .filter(c -> (c.getStatut() == StatutConsultation.RESERVEE ||
-                            c.getStatut() == StatutConsultation.VALIDEE) &&
-                            c.getDate().isAfter(LocalDate.now().minusDays(1)))
-                    .sorted(Comparator.comparing(Consultation::getDate).thenComparing(Consultation::getHeure))
-                    .collect(Collectors.toList());
-
-            List<Consultation> consultationsEnAttente = toutesConsultations.stream()
+            long consultationsReservees = toutesConsultations.stream()
                     .filter(c -> c.getStatut() == StatutConsultation.RESERVEE)
-                    .collect(Collectors.toList());
+                    .count();
 
             long consultationsTerminees = toutesConsultations.stream()
                     .filter(c -> c.getStatut() == StatutConsultation.TERMINEE)
                     .count();
 
-            Consultation prochaineConsultation = consultationsAvenir.isEmpty()
-                    ? null
-                    : consultationsAvenir.get(0);
-
             request.setAttribute("totalConsultations", toutesConsultations.size());
-            request.setAttribute("consultationsAvenir", consultationsAvenir);
-            request.setAttribute("consultationsEnAttente", consultationsEnAttente);
+            request.setAttribute("nombreConsultationsReservees", consultationsReservees);
             request.setAttribute("nombreConsultationsTerminees", consultationsTerminees);
             request.setAttribute("prochaineConsultation", prochaineConsultation);
             request.setAttribute("patient", patient);
-
-            LOGGER.info("Dashboard chargé pour patient ID: " + patientId);
 
             request.getRequestDispatcher("/WEB-INF/views/patient/dashboard.jsp")
                     .forward(request, response);
 
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Erreur lors du chargement du dashboard patient", e);
-            request.setAttribute("error", "Erreur lors du chargement du dashboard");
+            LOGGER.log(Level.SEVERE, "===== ERREUR DASHBOARD =====", e);
+            LOGGER.severe("Type: " + e.getClass().getName());
+            LOGGER.severe("Message: " + e.getMessage());
+
+            if (e.getCause() != null) {
+                LOGGER.severe("Cause: " + e.getCause().getClass().getName());
+                LOGGER.severe("Cause Message: " + e.getCause().getMessage());
+            }
+
+            e.printStackTrace();
+
+            request.setAttribute("error", "Erreur: " + e.getMessage());
             request.getRequestDispatcher("/WEB-INF/views/error/error.jsp")
                     .forward(request, response);
         }

@@ -408,6 +408,7 @@ public class ConsultationService {
         }
 
         try {
+            // Utiliser la méthode du repository qui charge déjà tout
             List<Consultation> historique = consultationRepository.findHistoriquePatient(patientId);
             LOGGER.info("Historique patient " + patientId + ": " + historique.size() + " consultations");
             return historique;
@@ -416,7 +417,6 @@ public class ConsultationService {
             throw new RuntimeException("Erreur système lors de la récupération", e);
         }
     }
-
     public List<Consultation> getPlanningDocteur(Long docteurId) {
         if (docteurId == null || docteurId <= 0) {
             throw new ValidationException("ID docteur invalide");
@@ -502,4 +502,58 @@ public class ConsultationService {
             throw new ValidationException(heureError);
         }
     }
-}
+
+    public Consultation getProchaineConsultationWithDetails(Long patientId) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            List<Consultation> results = em.createQuery(
+                            "SELECT DISTINCT c FROM Consultation c " +
+                                    "LEFT JOIN FETCH c.docteur d " +
+                                    "LEFT JOIN FETCH d.departement " +
+                                    "LEFT JOIN FETCH c.salle " +
+                                    "WHERE c.patient.id = :patientId " +
+                                    "AND (c.statut = :reservee OR c.statut = :validee) " +
+                                    "AND c.date >= :today " +
+                                    "ORDER BY c.date ASC, c.heure ASC",
+                            Consultation.class)
+                    .setParameter("patientId", patientId)
+                    .setParameter("reservee", StatutConsultation.RESERVEE)
+                    .setParameter("validee", StatutConsultation.VALIDEE)
+                    .setParameter("today", LocalDate.now())
+                    .setMaxResults(1)
+                    .getResultList();
+
+            return results.isEmpty() ? null : results.get(0);
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Erreur récupération prochaine consultation", e);
+            return null;
+        } finally {
+            em.close();
+        }
+    }
+
+    public List<Consultation> getConsultationsAvenirWithDetails(Long patientId) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            return em.createQuery(
+                            "SELECT DISTINCT c FROM Consultation c " +
+                                    "LEFT JOIN FETCH c.docteur d " +
+                                    "LEFT JOIN FETCH d.departement " +
+                                    "LEFT JOIN FETCH c.salle " +
+                                    "WHERE c.patient.id = :patientId " +
+                                    "AND (c.statut = :reservee OR c.statut = :validee) " +
+                                    "AND c.date >= :today " +
+                                    "ORDER BY c.date ASC, c.heure ASC",
+                            Consultation.class)
+                    .setParameter("patientId", patientId)
+                    .setParameter("reservee", StatutConsultation.RESERVEE)
+                    .setParameter("validee", StatutConsultation.VALIDEE)
+                    .setParameter("today", LocalDate.now())
+                    .getResultList();
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Erreur récupération consultations avenir", e);
+            return java.util.Collections.emptyList();
+        } finally {
+            em.close();
+        }
+    }}

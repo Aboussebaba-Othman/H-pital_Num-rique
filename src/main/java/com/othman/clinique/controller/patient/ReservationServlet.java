@@ -87,6 +87,18 @@ public class ReservationServlet extends HttpServlet {
 
         try {
             Long patientId = patient.getIdPatient();
+            // Debug: log session patient motDePasse sample before reservation
+            try {
+                String sp = patient.getMotDePasse();
+                if (sp == null) {
+                    LOGGER.warning("[DEBUG] Session patient motDePasse is NULL before reservation for id=" + patientId);
+                } else {
+                    String shortHash = sp.length() > 12 ? sp.substring(0, 12) + "..." : sp;
+                    LOGGER.info("[DEBUG] Session patient motDePasse sample before reservation for id=" + patientId + ": " + shortHash);
+                }
+            } catch (Exception ex) {
+                LOGGER.log(Level.FINE, "[DEBUG] could not sample session patient motDePasse before reservation", ex);
+            }
             Long docteurId = Long.parseLong(request.getParameter("docteurId"));
             LocalDate date = LocalDate.parse(request.getParameter("date"));
             LocalTime heure = LocalTime.parse(request.getParameter("heure"));
@@ -96,6 +108,18 @@ public class ReservationServlet extends HttpServlet {
                     patientId, docteurId, date, heure, motif
             );
 
+            // Debug: log session patient motDePasse sample after reservation
+            try {
+                String sp2 = patient.getMotDePasse();
+                if (sp2 == null) {
+                    LOGGER.warning("[DEBUG] Session patient motDePasse is NULL after reservation for id=" + patientId);
+                } else {
+                    String shortHash2 = sp2.length() > 12 ? sp2.substring(0, 12) + "..." : sp2;
+                    LOGGER.info("[DEBUG] Session patient motDePasse sample after reservation for id=" + patientId + ": " + shortHash2);
+                }
+            } catch (Exception ex) {
+                LOGGER.log(Level.FINE, "[DEBUG] could not sample session patient motDePasse after reservation", ex);
+            }
             session.setAttribute("successMessage",
                     "Consultation réservée avec succès ! Référence: #" + consultation.getIdConsultation());
 

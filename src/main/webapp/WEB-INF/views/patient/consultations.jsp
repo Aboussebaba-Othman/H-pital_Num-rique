@@ -7,258 +7,287 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mes Consultations - Clinique</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .status-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 50px;
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-        .status-RESERVEE { background-color: #fff3cd; color: #856404; }
-        .status-VALIDEE { background-color: #d1ecf1; color: #0c5460; }
-        .status-TERMINEE { background-color: #d4edda; color: #155724; }
-        .status-ANNULEE { background-color: #f8d7da; color: #721c24; }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="${pageContext.request.contextPath}/patient/dashboard">
-            <i class="fas fa-hospital"></i> Clinique
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="${pageContext.request.contextPath}/patient/dashboard">
-                        <i class="fas fa-home"></i> Tableau de bord
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="${pageContext.request.contextPath}/patient/docteurs">
-                        <i class="fas fa-user-md"></i> Docteurs
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active" href="${pageContext.request.contextPath}/patient/consultations">
-                        <i class="fas fa-calendar-check"></i> Mes Consultations
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="${pageContext.request.contextPath}/patient/historique">
-                        <i class="fas fa-history"></i> Historique
-                    </a>
-                </li>
-            </ul>
-            <ul class="navbar-nav">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
-                       data-bs-toggle="dropdown">
-                        <i class="fas fa-user"></i> ${sessionScope.userConnecte.prenom} ${sessionScope.userConnecte.nom}
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/logout">
-                            <i class="fas fa-sign-out-alt"></i> Déconnexion
-                        </a></li>
-                    </ul>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
+<body class="bg-gray-50">
 
-<div class="container mt-4">
+<!-- Définir la page active pour la sidebar -->
+<c:set var="pageParam" value="consultations" scope="request"/>
+
+<!-- Inclure la sidebar patient -->
+<%@ include file="../common/patient-nav.jsp" %>
+
+<!-- Contenu principal -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
     <!-- En-tête -->
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h2><i class="fas fa-calendar-check text-primary"></i> Mes Consultations</h2>
-            <p class="text-muted">Gérez vos rendez-vous médicaux</p>
-        </div>
-        <div class="col-md-4 text-end">
-            <a href="${pageContext.request.contextPath}/patient/reserver" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Nouvelle consultation
-            </a>
+    <div class="mb-8">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div class="mb-4 md:mb-0">
+                <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+                    <i class="fas fa-calendar-check text-indigo-600 mr-3"></i>
+                    Mes Consultations
+                </h1>
+                <p class="mt-2 text-gray-600">Gérez vos rendez-vous médicaux</p>
+            </div>
+            <div>
+                <a href="${pageContext.request.contextPath}/patient/reserver" 
+                   class="inline-flex items-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition duration-200">
+                    <i class="fas fa-plus mr-2"></i>
+                    Nouvelle consultation
+                </a>
+            </div>
         </div>
     </div>
 
     <!-- Messages -->
     <c:if test="${not empty sessionScope.successMessage}">
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fas fa-check-circle"></i> ${sessionScope.successMessage}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div class="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg shadow">
+            <div class="flex items-center">
+                <i class="fas fa-check-circle text-green-500 text-xl mr-3"></i>
+                <p class="text-green-800 font-medium">${sessionScope.successMessage}</p>
+            </div>
         </div>
         <c:remove var="successMessage" scope="session"/>
     </c:if>
 
     <c:if test="${not empty sessionScope.errorMessage}">
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-circle"></i> ${sessionScope.errorMessage}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg shadow">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-circle text-red-500 text-xl mr-3"></i>
+                <p class="text-red-800 font-medium">${sessionScope.errorMessage}</p>
+            </div>
         </div>
         <c:remove var="errorMessage" scope="session"/>
     </c:if>
 
-    <!-- Consultations Futures -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Consultations à venir</h5>
+    <!-- Consultations à venir -->
+    <div class="mb-8 bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
+            <h2 class="text-xl font-bold text-white flex items-center">
+                <i class="fas fa-calendar-alt mr-3"></i>
+                Consultations à venir
+            </h2>
         </div>
-        <div class="card-body">
+        <div class="p-6">
             <c:choose>
                 <c:when test="${empty consultationsFutures}">
-                    <p class="text-muted mb-0">Aucune consultation à venir</p>
+                    <div class="text-center py-12">
+                        <div class="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-4">
+                            <i class="fas fa-calendar-times text-gray-400 text-3xl"></i>
+                        </div>
+                        <p class="text-gray-500 text-lg">Aucune consultation à venir</p>
+                        <a href="${pageContext.request.contextPath}/patient/reserver" 
+                           class="inline-block mt-4 text-indigo-600 hover:text-indigo-800 font-medium">
+                            Réserver une consultation →
+                        </a>
+                    </div>
                 </c:when>
                 <c:otherwise>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Heure</th>
-                                <th>Docteur</th>
-                                <th>Motif</th>
-                                <th>Statut</th>
-                                <th>Actions</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <c:forEach items="${consultationsFutures}" var="consultation">
-                                <tr>
-                                    <td>${df:formatDate(consultation.date)}</td>
-                                    <td>${df:formatTime(consultation.heure)}</td>
-                                    <td>
-                                        <strong>Dr. ${consultation.docteur.prenom} ${consultation.docteur.nom}</strong>
-                                        <br>
-                                        <small class="text-muted">${consultation.docteur.specialite}</small>
-                                    </td>
-                                    <td>
-                                                <span class="d-inline-block text-truncate" style="max-width: 200px;"
-                                                      title="${consultation.motifConsultation}">
-                                                        ${consultation.motifConsultation}
-                                                </span>
-                                    </td>
-                                    <td>
-                                                <span class="status-badge status-${consultation.statut}">
+                    <div class="space-y-4">
+                        <c:forEach items="${consultationsFutures}" var="consultation">
+                            <div class="border border-gray-200 rounded-xl p-6 hover:shadow-md transition duration-200">
+                                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                                    <!-- Info principale -->
+                                    <div class="flex-1">
+                                        <div class="flex items-start gap-4">
+                                            <!-- Icône calendrier -->
+                                            <div class="flex-shrink-0">
+                                                <div class="w-16 h-16 bg-indigo-100 rounded-xl flex flex-col items-center justify-center">
+                                                    <span class="text-xs text-indigo-600 font-semibold uppercase">
+                                                        ${df:formatDate(consultation.date).substring(3, 6)}
+                                                    </span>
+                                                    <span class="text-2xl font-bold text-indigo-600">
+                                                        ${df:formatDate(consultation.date).substring(0, 2)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Détails -->
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-center gap-3 mb-2">
+                                                    <h3 class="text-lg font-semibold text-gray-900">
+                                                        Dr. ${consultation.docteur.prenom} ${consultation.docteur.nom}
+                                                    </h3>
                                                     <c:choose>
-                                                        <c:when test="${consultation.statut == 'RESERVEE'}">Réservée</c:when>
-                                                        <c:when test="${consultation.statut == 'VALIDEE'}">Validée</c:when>
-                                                        <c:when test="${consultation.statut == 'TERMINEE'}">Terminée</c:when>
-                                                        <c:when test="${consultation.statut == 'ANNULEE'}">Annulée</c:when>
+                                                        <c:when test="${consultation.statut == 'RESERVEE'}">
+                                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                                                                <i class="fas fa-clock mr-1.5"></i>Réservée
+                                                            </span>
+                                                        </c:when>
+                                                        <c:when test="${consultation.statut == 'VALIDEE'}">
+                                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                                                                <i class="fas fa-check mr-1.5"></i>Validée
+                                                            </span>
+                                                        </c:when>
+                                                        <c:when test="${consultation.statut == 'TERMINEE'}">
+                                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                                                <i class="fas fa-check-circle mr-1.5"></i>Terminée
+                                                            </span>
+                                                        </c:when>
+                                                        <c:when test="${consultation.statut == 'ANNULEE'}">
+                                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                                                                <i class="fas fa-times-circle mr-1.5"></i>Annulée
+                                                            </span>
+                                                        </c:when>
                                                     </c:choose>
-                                                </span>
-                                    </td>
-                                    <td>
+                                                </div>
+                                                <p class="text-sm text-indigo-600 font-medium mb-2">
+                                                    <i class="fas fa-stethoscope mr-1"></i>
+                                                    ${consultation.docteur.specialite}
+                                                </p>
+                                                <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                                                    <span class="flex items-center">
+                                                        <i class="fas fa-clock mr-2 text-gray-400"></i>
+                                                        ${df:formatTime(consultation.heure)}
+                                                    </span>
+                                                    <span class="flex items-center">
+                                                        <i class="fas fa-notes-medical mr-2 text-gray-400"></i>
+                                                        <span class="truncate max-w-xs" title="${consultation.motifConsultation}">
+                                                            ${consultation.motifConsultation}
+                                                        </span>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Actions -->
+                                    <div class="flex-shrink-0">
                                         <c:if test="${consultation.statut == 'RESERVEE' || consultation.statut == 'VALIDEE'}">
-                                            <button type="button" class="btn btn-sm btn-outline-danger"
-                                                    onclick="annulerConsultation(${consultation.idConsultation})">
-                                                <i class="fas fa-times"></i> Annuler
+                                            <button type="button" 
+                                                    data-consultation-id="${consultation.idConsultation}"
+                                                    class="btn-annuler inline-flex items-center px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 font-medium rounded-lg transition duration-200">
+                                                <i class="fas fa-times mr-2"></i>
+                                                Annuler
                                             </button>
                                         </c:if>
-                                    </td>
-                                </tr>
-                            </c:forEach>
-                            </tbody>
-                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </c:forEach>
                     </div>
                 </c:otherwise>
             </c:choose>
         </div>
     </div>
 
-    <!-- Consultations Passées -->
-    <div class="card">
-        <div class="card-header bg-secondary text-white">
-            <h5 class="mb-0"><i class="fas fa-history"></i> Consultations passées</h5>
+    <!-- Consultations passées -->
+    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div class="bg-gradient-to-r from-gray-700 to-gray-900 px-6 py-4">
+            <h2 class="text-xl font-bold text-white flex items-center">
+                <i class="fas fa-history mr-3"></i>
+                Consultations passées
+            </h2>
         </div>
-        <div class="card-body">
+        <div class="p-6">
             <c:choose>
                 <c:when test="${empty consultationsPassees}">
-                    <p class="text-muted mb-0">Aucune consultation passée</p>
+                    <div class="text-center py-12">
+                        <div class="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-4">
+                            <i class="fas fa-inbox text-gray-400 text-3xl"></i>
+                        </div>
+                        <p class="text-gray-500 text-lg">Aucune consultation passée</p>
+                    </div>
                 </c:when>
                 <c:otherwise>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Heure</th>
-                                <th>Docteur</th>
-                                <th>Motif</th>
-                                <th>Statut</th>
-                                <th>Actions</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <c:forEach items="${consultationsPassees}" var="consultation">
-                                <tr>
-                                    <td>${df:formatDate(consultation.date)}</td>
-                                    <td>${df:formatTime(consultation.heure)}</td>
-                                    <td>
-                                        <strong>Dr. ${consultation.docteur.prenom} ${consultation.docteur.nom}</strong>
-                                        <br>
-                                        <small class="text-muted">${consultation.docteur.specialite}</small>
-                                    </td>
-                                    <td>
-                                                <span class="d-inline-block text-truncate" style="max-width: 200px;"
-                                                      title="${consultation.motifConsultation}">
-                                                        ${consultation.motifConsultation}
-                                                </span>
-                                    </td>
-                                    <td>
-                                                <span class="status-badge status-${consultation.statut}">
-                                                    <c:choose>
-                                                        <c:when test="${consultation.statut == 'TERMINEE'}">Terminée</c:when>
-                                                        <c:when test="${consultation.statut == 'ANNULEE'}">Annulée</c:when>
-                                                    </c:choose>
-                                                </span>
-                                    </td>
-                                    <td>
-                                        <c:if test="${consultation.statut == 'TERMINEE' && not empty consultation.compteRendu}">
-                                            <button type="button" class="btn btn-sm btn-outline-info"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#compteRenduModal${consultation.idConsultation}">
-                                                <i class="fas fa-file-alt"></i> Compte-rendu
-                                            </button>
-                                        </c:if>
-                                    </td>
-                                </tr>
-
-                                <!-- Modal Compte-rendu -->
-                                <c:if test="${consultation.statut == 'TERMINEE' && not empty consultation.compteRendu}">
-                                    <div class="modal fade" id="compteRenduModal${consultation.idConsultation}" tabindex="-1">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">
-                                                        <i class="fas fa-file-alt"></i> Compte-rendu de consultation
-                                                    </h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <div class="space-y-4">
+                        <c:forEach items="${consultationsPassees}" var="consultation">
+                            <div class="border border-gray-200 rounded-xl p-6 hover:shadow-md transition duration-200 bg-gray-50">
+                                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                                    <!-- Info principale -->
+                                    <div class="flex-1">
+                                        <div class="flex items-start gap-4">
+                                            <!-- Icône calendrier -->
+                                            <div class="flex-shrink-0">
+                                                <div class="w-16 h-16 bg-gray-200 rounded-xl flex flex-col items-center justify-center">
+                                                    <span class="text-xs text-gray-600 font-semibold uppercase">
+                                                        ${df:formatDate(consultation.date).substring(3, 6)}
+                                                    </span>
+                                                    <span class="text-2xl font-bold text-gray-700">
+                                                        ${df:formatDate(consultation.date).substring(0, 2)}
+                                                    </span>
                                                 </div>
-                                                <div class="modal-body">
-                                                    <p><strong>Date:</strong> ${df:formatDate(consultation.date)}</p>
-                                                    <p><strong>Docteur:</strong>
+                                            </div>
+                                            
+                                            <!-- Détails -->
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-center gap-3 mb-2">
+                                                    <h3 class="text-lg font-semibold text-gray-900">
                                                         Dr. ${consultation.docteur.prenom} ${consultation.docteur.nom}
-                                                    </p>
-                                                    <hr>
-                                                    <p class="mb-0">${consultation.compteRendu}</p>
+                                                    </h3>
+                                                    <c:choose>
+                                                        <c:when test="${consultation.statut == 'TERMINEE'}">
+                                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                                                <i class="fas fa-check-circle mr-1.5"></i>Terminée
+                                                            </span>
+                                                        </c:when>
+                                                        <c:when test="${consultation.statut == 'ANNULEE'}">
+                                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                                                                <i class="fas fa-times-circle mr-1.5"></i>Annulée
+                                                            </span>
+                                                        </c:when>
+                                                    </c:choose>
                                                 </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                                        Fermer
-                                                    </button>
+                                                <p class="text-sm text-gray-600 font-medium mb-2">
+                                                    <i class="fas fa-stethoscope mr-1"></i>
+                                                    ${consultation.docteur.specialite}
+                                                </p>
+                                                <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                                                    <span class="flex items-center">
+                                                        <i class="fas fa-clock mr-2 text-gray-400"></i>
+                                                        ${df:formatTime(consultation.heure)}
+                                                    </span>
+                                                    <span class="flex items-center">
+                                                        <i class="fas fa-notes-medical mr-2 text-gray-400"></i>
+                                                        <span class="truncate max-w-xs" title="${consultation.motifConsultation}">
+                                                            ${consultation.motifConsultation}
+                                                        </span>
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                    
+                                    <!-- Actions -->
+                                    <div class="flex-shrink-0">
+                                        <c:if test="${consultation.statut == 'TERMINEE' && not empty consultation.compteRendu}">
+                                            <button type="button" 
+                                                    data-consultation-id="${consultation.idConsultation}"
+                                                    class="btn-compte-rendu inline-flex items-center px-4 py-2 bg-sky-50 hover:bg-sky-100 text-sky-700 font-medium rounded-lg transition duration-200">
+                                                <i class="fas fa-file-alt mr-2"></i>
+                                                Compte-rendu
+                                            </button>
+                                        </c:if>
+                                    </div>
+                                </div>
+                                
+                                <!-- Modal Compte-rendu (inline, caché par défaut) -->
+                                <c:if test="${consultation.statut == 'TERMINEE' && not empty consultation.compteRendu}">
+                                    <div id="modal-${consultation.idConsultation}" class="hidden mt-4 p-4 bg-white border-t-2 border-sky-200 rounded-lg">
+                                        <h4 class="font-bold text-gray-900 mb-3 flex items-center">
+                                            <i class="fas fa-file-medical text-sky-600 mr-2"></i>
+                                            Compte-rendu de consultation
+                                        </h4>
+                                        <div class="space-y-2 text-sm">
+                                            <p><strong class="text-gray-700">Date:</strong> ${df:formatDate(consultation.date)}</p>
+                                            <p><strong class="text-gray-700">Docteur:</strong> Dr. ${consultation.docteur.prenom} ${consultation.docteur.nom}</p>
+                                        </div>
+                                        <hr class="my-3">
+                                        <div class="prose prose-sm max-w-none">
+                                            <p class="text-gray-700 whitespace-pre-line">${consultation.compteRendu}</p>
+                                        </div>
+                                        <div class="mt-4">
+                                            <button data-consultation-id="${consultation.idConsultation}"
+                                                    class="btn-close-cr px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition">
+                                                Fermer
+                                            </button>
+                                        </div>
+                                    </div>
                                 </c:if>
-                            </c:forEach>
-                            </tbody>
-                        </table>
+                            </div>
+                        </c:forEach>
                     </div>
                 </c:otherwise>
             </c:choose>
@@ -267,42 +296,77 @@
 </div>
 
 <!-- Modal de confirmation d'annulation -->
-<div class="modal fade" id="annulerModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fas fa-exclamation-triangle text-warning"></i> Confirmer l'annulation
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Êtes-vous sûr de vouloir annuler cette consultation ?</p>
-                <p class="text-muted small mb-0">
-                    <i class="fas fa-info-circle"></i> Cette action est irréversible.
+<div id="annulerModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+        <div class="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4">
+            <h3 class="text-xl font-bold text-white flex items-center">
+                <i class="fas fa-exclamation-triangle mr-3"></i>
+                Confirmer l'annulation
+            </h3>
+        </div>
+        <div class="p-6">
+            <p class="text-gray-700 mb-4">Êtes-vous sûr de vouloir annuler cette consultation ?</p>
+            <div class="bg-amber-50 border-l-4 border-amber-400 p-3 rounded">
+                <p class="text-sm text-amber-800 flex items-start">
+                    <i class="fas fa-info-circle mr-2 mt-0.5"></i>
+                    <span>Cette action est irréversible et doit être effectuée au moins 24h avant la consultation.</span>
                 </p>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Non, garder</button>
-                <form id="annulerForm" method="post">
-                    <input type="hidden" name="action" value="annuler">
-                    <input type="hidden" name="consultationId" id="consultationIdToCancel">
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-times"></i> Oui, annuler
-                    </button>
-                </form>
-            </div>
+        </div>
+        <div class="px-6 pb-6 flex gap-3">
+            <button type="button" onclick="closeAnnulerModal()" 
+                    class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-lg transition">
+                Non, garder
+            </button>
+            <form id="annulerForm" method="post" class="flex-1">
+                <input type="hidden" name="action" value="annuler">
+                <input type="hidden" name="consultationId" id="consultationIdToCancel">
+                <button type="submit" 
+                        class="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition">
+                    <i class="fas fa-times mr-2"></i>Oui, annuler
+                </button>
+            </form>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    function annulerConsultation(consultationId) {
-        document.getElementById('consultationIdToCancel').value = consultationId;
-        const modal = new bootstrap.Modal(document.getElementById('annulerModal'));
-        modal.show();
+    // Gestion des boutons d'annulation
+    document.querySelectorAll('.btn-annuler').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const consultationId = this.getAttribute('data-consultation-id');
+            document.getElementById('consultationIdToCancel').value = consultationId;
+            document.getElementById('annulerModal').classList.remove('hidden');
+        });
+    });
+    
+    function closeAnnulerModal() {
+        document.getElementById('annulerModal').classList.add('hidden');
     }
+    
+    // Gestion des boutons compte-rendu (ouvrir)
+    document.querySelectorAll('.btn-compte-rendu').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const consultationId = this.getAttribute('data-consultation-id');
+            document.getElementById('modal-' + consultationId).classList.remove('hidden');
+        });
+    });
+    
+    // Gestion des boutons compte-rendu (fermer)
+    document.querySelectorAll('.btn-close-cr').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const consultationId = this.getAttribute('data-consultation-id');
+            document.getElementById('modal-' + consultationId).classList.add('hidden');
+        });
+    });
+    
+    // Fermer le modal d'annulation en cliquant à l'extérieur
+    document.getElementById('annulerModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeAnnulerModal();
+        }
+    });
 </script>
+
 </body>
 </html>
