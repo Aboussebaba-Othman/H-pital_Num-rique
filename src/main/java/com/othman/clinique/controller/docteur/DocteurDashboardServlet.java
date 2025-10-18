@@ -44,21 +44,38 @@ public class DocteurDashboardServlet extends HttpServlet {
         Docteur docteur = (Docteur) session.getAttribute("userConnecte");
 
         if (docteur == null) {
+            LOGGER.warning("Aucun docteur connecté - redirection login");
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
         try {
             Long docteurId = docteur.getIdDocteur();
+            LOGGER.info("=== Chargement dashboard docteur ID: " + docteurId + " ===");
 
-            // Recharger le docteur avec ses relations pour éviter LazyInitializationException
+            // Recharger le docteur avec ses relations
             Docteur docteurComplet = docteurService.getDocteurById(docteurId);
-            
+
+            // Vérifications de sécurité
+            if (docteurComplet == null) {
+                throw new RuntimeException("Docteur non trouvé en base de données");
+            }
+
+            if (docteurComplet.getDepartement() == null) {
+                LOGGER.severe("ERREUR CRITIQUE: Département NULL pour docteur ID: " + docteurId);
+                throw new RuntimeException("Le docteur n'a pas de département assigné");
+            }
+
+            LOGGER.info("Docteur chargé: " + docteurComplet.getNom() + " " + docteurComplet.getPrenom());
+            LOGGER.info("Département: " + docteurComplet.getDepartement().getNom());
+
             // Récupérer le planning complet (avec FETCH joins) - seulement futures RESERVEE/VALIDEE
             List<Consultation> planning = consultationService.getPlanningDocteur(docteurId);
-            
+            LOGGER.info("Planning chargé: " + planning.size() + " consultations futures");
+
             // Récupérer TOUTES les consultations pour les stats
             List<Consultation> toutesConsultations = consultationService.getConsultationsByDocteur(docteurId);
+            LOGGER.info("Total consultations: " + toutesConsultations.size());
 
             // Consultations en attente de validation
             List<Consultation> consultationsEnAttente = planning.stream()
@@ -96,23 +113,41 @@ public class DocteurDashboardServlet extends HttpServlet {
                     ? null
                     : consultationsValidees.get(0);
 
+            LOGGER.info("Statistiques: Total=" + totalConsultations +
+                    ", EnAttente=" + consultationsEnAttente.size() +
+                    ", Aujourd'hui=" + consultationsAujourdhui.size() +
+                    ", Validées=" + consultationsValidees.size());
+
             request.setAttribute("docteur", docteurComplet);
             request.setAttribute("totalConsultations", totalConsultations);
             request.setAttribute("consultationsEnAttente", consultationsEnAttente);
             request.setAttribute("consultationsAujourdhui", consultationsAujourdhui);
-            request.setAttribute("consultationsDuJour", consultationsAujourdhui); // Alias pour la JSP
+            request.setAttribute("consultationsDuJour", consultationsAujourdhui);
             request.setAttribute("consultationsValidees", consultationsValidees);
             request.setAttribute("consultationsTerminees", consultationsTerminees);
             request.setAttribute("prochaineConsultation", prochaineConsultation);
 
-            LOGGER.info("Dashboard chargé pour docteur ID: " + docteurId);
+            LOGGER.info("=== Dashboard chargé avec succès ===");
 
             request.getRequestDispatcher("/WEB-INF/views/docteur/dashboard.jsp")
                     .forward(request, response);
 
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Erreur lors du chargement du dashboard docteur", e);
-            request.setAttribute("error", "Erreur lors du chargement du dashboard");
+            LOGGER.log(Level.SEVERE, "ERREUR DASHBOARD DOCTEUR", e);
+
+            // Log détaillé de l'exception
+            LOGGER.severe("Type: " + e.getClass().getName());
+            LOGGER.severe("Message: " + e.getMessage());
+
+            if (e.getCause() != null) {
+                LOGGER.severe("Cause: " + e.getCause().getMessage());
+            }
+
+            // Afficher la stacktrace dans les logs
+            e.printStackTrace();
+
+            request.setAttribute("error", "Erreur lors du chargement du dashboard: " + e.getMessage());
+            request.setAttribute("errorType", e.getClass().getSimpleName());
             request.getRequestDispatcher("/WEB-INF/views/error/error.jsp")
                     .forward(request, response);
         }

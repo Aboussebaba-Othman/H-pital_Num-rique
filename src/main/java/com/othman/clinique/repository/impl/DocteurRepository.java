@@ -101,7 +101,7 @@ public class DocteurRepository implements IDocteurRepository {
                                     "LEFT JOIN FETCH d.planning p " +
                                     "LEFT JOIN FETCH p.patient " +
                                     "LEFT JOIN FETCH p.salle " +
-                                    "WHERE d.id = :id",
+                                    "WHERE d.id = :id",  // ✅ Utiliser "d.id"
                             Docteur.class
                     )
                     .setParameter("id", docteurId)
@@ -115,7 +115,6 @@ public class DocteurRepository implements IDocteurRepository {
             JPAUtil.close(em);
         }
     }
-
     @Override
     public List<Docteur> search(String searchTerm) {
         EntityManager em = JPAUtil.getEntityManager();
@@ -172,22 +171,23 @@ public class DocteurRepository implements IDocteurRepository {
     public Optional<Docteur> findById(Long id) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            // Simple find avec FETCH du département (obligatoire)
             List<Docteur> results = em.createQuery(
                             "SELECT DISTINCT d FROM Docteur d " +
                                     "LEFT JOIN FETCH d.departement " +
-                                    "WHERE d.id = :id",
+                                    "WHERE d.id = :id",  // ✅ Garder "d.id" car c'est la propriété héritée
                             Docteur.class
                     )
                     .setParameter("id", id)
                     .getResultList();
 
             return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Erreur findById docteur: " + id, e);
+            return Optional.empty();
         } finally {
             JPAUtil.close(em);
         }
     }
-
     @Override
     public List<Docteur> findAll() {
         EntityManager em = JPAUtil.getEntityManager();
