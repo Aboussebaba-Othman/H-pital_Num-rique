@@ -14,7 +14,7 @@
 <c:set var="pageParam" value="consultations" scope="request"/>
 <%@ include file="../common/patient-nav.jsp" %>
 
-<div class="max-w-4xl mx-auto p-6">
+<div class="max-w-7xl mx-auto p-4">
 
     <!-- En-tête stylé -->
     <div class="mb-8">
@@ -59,7 +59,7 @@
     </c:if>
 
     <!-- Formulaire moderne -->
-    <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+    <div class="bg-white shadow-xl p-8">
         <form method="post" action="${pageContext.request.contextPath}/patient/reserver" class="space-y-6">
 
             <!-- Sélection du docteur -->
@@ -156,7 +156,7 @@
     </div>
 
     <!-- Informations importantes -->
-    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-lg p-8 border border-blue-100">
+    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg p-8 border border-blue-100">
         <div class="flex items-center mb-4">
             <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center mr-3">
                 <i class="fas fa-info-circle text-white"></i>

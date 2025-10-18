@@ -51,8 +51,14 @@ public class DocteurDashboardServlet extends HttpServlet {
         try {
             Long docteurId = docteur.getIdDocteur();
 
-            // Récupérer le planning complet
+            // Recharger le docteur avec ses relations pour éviter LazyInitializationException
+            Docteur docteurComplet = docteurService.getDocteurById(docteurId);
+            
+            // Récupérer le planning complet (avec FETCH joins) - seulement futures RESERVEE/VALIDEE
             List<Consultation> planning = consultationService.getPlanningDocteur(docteurId);
+            
+            // Récupérer TOUTES les consultations pour les stats
+            List<Consultation> toutesConsultations = consultationService.getConsultationsByDocteur(docteurId);
 
             // Consultations en attente de validation
             List<Consultation> consultationsEnAttente = planning.stream()
@@ -79,9 +85,9 @@ public class DocteurDashboardServlet extends HttpServlet {
                             .thenComparing(Consultation::getHeure))
                     .collect(Collectors.toList());
 
-            // Statistiques
-            long totalConsultations = planning.size();
-            long consultationsTerminees = planning.stream()
+            // Statistiques basées sur TOUTES les consultations
+            long totalConsultations = toutesConsultations.size();
+            long consultationsTerminees = toutesConsultations.stream()
                     .filter(c -> c.getStatut() == StatutConsultation.TERMINEE)
                     .count();
 
@@ -90,10 +96,11 @@ public class DocteurDashboardServlet extends HttpServlet {
                     ? null
                     : consultationsValidees.get(0);
 
-            request.setAttribute("docteur", docteur);
+            request.setAttribute("docteur", docteurComplet);
             request.setAttribute("totalConsultations", totalConsultations);
             request.setAttribute("consultationsEnAttente", consultationsEnAttente);
             request.setAttribute("consultationsAujourdhui", consultationsAujourdhui);
+            request.setAttribute("consultationsDuJour", consultationsAujourdhui); // Alias pour la JSP
             request.setAttribute("consultationsValidees", consultationsValidees);
             request.setAttribute("consultationsTerminees", consultationsTerminees);
             request.setAttribute("prochaineConsultation", prochaineConsultation);

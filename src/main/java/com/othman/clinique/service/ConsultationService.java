@@ -440,6 +440,13 @@ public class ConsultationService {
         return consultationRepository.findByPatientId(patientId);
     }
 
+    public List<Consultation> getConsultationsByDocteur(Long docteurId) {
+        if (docteurId == null || docteurId <= 0) {
+            throw new ValidationException("ID docteur invalide");
+        }
+
+        return consultationRepository.findByDocteurId(docteurId);
+    }
 
     public List<Consultation> getConsultationsByStatut(StatutConsultation statut) {
         if (statut == null) {

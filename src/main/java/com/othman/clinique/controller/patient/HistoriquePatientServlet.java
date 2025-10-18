@@ -90,6 +90,40 @@ public class HistoriquePatientServlet extends HttpServlet {
                     .filter(c -> c.getStatut() == StatutConsultation.ANNULEE)
                     .count();
 
+            long consultationsValidees = historique.stream()
+                    .filter(c -> c.getStatut() == StatutConsultation.VALIDEE)
+                    .count();
+
+            // Statistiques par docteur
+            java.util.Map<String, Long> consultationsParDocteur = historique.stream()
+                    .filter(c -> c.getDocteur() != null)
+                    .collect(Collectors.groupingBy(
+                            c -> "Dr. " + c.getDocteur().getPrenom() + " " + c.getDocteur().getNom(),
+                            Collectors.counting()
+                    ));
+
+            // Statistiques par spécialité
+            java.util.Map<String, Long> consultationsParSpecialite = historique.stream()
+                    .filter(c -> c.getDocteur() != null && c.getDocteur().getSpecialite() != null)
+                    .collect(Collectors.groupingBy(
+                            c -> c.getDocteur().getSpecialite(),
+                            Collectors.counting()
+                    ));
+
+            // Statistiques par mois (format: "YYYY-MM" -> "Janvier 2025")
+            java.util.Map<String, Long> consultationsParMois = historique.stream()
+                    .filter(c -> c.getDate() != null)
+                    .collect(Collectors.groupingBy(
+                            c -> {
+                                int mois = c.getDate().getMonthValue();
+                                int annee = c.getDate().getYear();
+                                String[] nomsMois = {"Jan", "Fév", "Mar", "Avr", "Mai", "Juin", 
+                                                     "Juil", "Août", "Sep", "Oct", "Nov", "Déc"};
+                                return nomsMois[mois - 1] + " " + annee;
+                            },
+                            Collectors.counting()
+                    ));
+
             // Années disponibles pour le filtre
             List<Integer> anneesDisponibles = historique.stream()
                     .map(c -> c.getDate())
@@ -99,10 +133,22 @@ public class HistoriquePatientServlet extends HttpServlet {
                     .sorted((a, b) -> b - a)
                     .collect(Collectors.toList());
 
+            // Liste des docteurs consultés
+            List<com.othman.clinique.model.Docteur> docteursConsultes = historique.stream()
+                    .map(Consultation::getDocteur)
+                    .filter(d -> d != null)
+                    .distinct()
+                    .collect(Collectors.toList());
+
             request.setAttribute("historique", historique);
             request.setAttribute("consultationsTerminees", consultationsTerminees);
             request.setAttribute("consultationsAnnulees", consultationsAnnulees);
+            request.setAttribute("consultationsValidees", consultationsValidees);
+            request.setAttribute("consultationsParDocteur", consultationsParDocteur);
+            request.setAttribute("consultationsParSpecialite", consultationsParSpecialite);
+            request.setAttribute("consultationsParMois", consultationsParMois);
             request.setAttribute("anneesDisponibles", anneesDisponibles);
+            request.setAttribute("docteursConsultes", docteursConsultes);
 
             LOGGER.info("Historique chargé pour patient ID: " + patientId +
                     " - " + historique.size() + " consultations");

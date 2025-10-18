@@ -66,13 +66,25 @@ public class ConsultationsPatientServlet extends HttpServlet {
             LocalDate aujourdhui = LocalDate.now();
 
             List<Consultation> consultationsFutures = consultations.stream()
-                    .filter(c -> c.getDate().isAfter(aujourdhui) || c.getDate().equals(aujourdhui))
+                    .filter(c -> {
+                        // Future si date future ET pas terminée/annulée
+                        boolean isFutureDate = c.getDate().isAfter(aujourdhui) || c.getDate().equals(aujourdhui);
+                        boolean isNotCompleted = c.getStatut() != StatutConsultation.TERMINEE 
+                                              && c.getStatut() != StatutConsultation.ANNULEE;
+                        return isFutureDate && isNotCompleted;
+                    })
                     .sorted(Comparator.comparing(Consultation::getDate)
                             .thenComparing(Consultation::getHeure))
                     .collect(Collectors.toList());
 
             List<Consultation> consultationsPassees = consultations.stream()
-                    .filter(c -> c.getDate().isBefore(aujourdhui))
+                    .filter(c -> {
+                        // Consultations passées = date passée OU statut TERMINEE/ANNULEE
+                        boolean isDatePassed = c.getDate().isBefore(aujourdhui);
+                        boolean isCompleted = c.getStatut() == StatutConsultation.TERMINEE 
+                                           || c.getStatut() == StatutConsultation.ANNULEE;
+                        return isDatePassed || isCompleted;
+                    })
                     .sorted(Comparator.comparing(Consultation::getDate)
                             .thenComparing(Consultation::getHeure).reversed())
                     .collect(Collectors.toList());

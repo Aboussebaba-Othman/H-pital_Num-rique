@@ -5,7 +5,7 @@
 <div class="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
 
     <!-- Sidebar -->
-    <aside class="w-56 bg-gradient-to-b from-blue-600 to-indigo-600 text-white flex flex-col shadow-lg fixed h-full">
+    <aside class="w-64 bg-gradient-to-b from-blue-600 to-indigo-600 text-white flex flex-col shadow-lg fixed h-full">
 
         <!-- Logo & Titre -->
         <div class="flex items-center justify-center h-20 border-b border-white border-opacity-20">

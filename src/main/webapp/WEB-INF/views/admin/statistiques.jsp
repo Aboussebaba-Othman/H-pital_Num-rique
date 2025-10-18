@@ -504,12 +504,7 @@
             }
         }
     });
-</script>
 
-</body>
-</html>
-
-<script>
     // Apply delayed animations and percentage widths set via data- attributes
     document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('[data-delay]').forEach(function(el) {
@@ -527,3 +522,6 @@
         });
     });
 </script>
+
+</body>
+</html>

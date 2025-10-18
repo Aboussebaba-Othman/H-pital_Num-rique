@@ -41,11 +41,12 @@ public class ConsultationRepositoryImpl implements IConsultationRepository {
     public List<Consultation> findByDocteurId(Long docteurId) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            // EAGER FETCH
+            // EAGER FETCH avec departement du docteur
             return em.createQuery(
                             "SELECT DISTINCT c FROM Consultation c " +
                                     "LEFT JOIN FETCH c.patient " +
-                                    "LEFT JOIN FETCH c.docteur " +
+                                    "LEFT JOIN FETCH c.docteur d " +
+                                    "LEFT JOIN FETCH d.departement " +
                                     "LEFT JOIN FETCH c.salle " +
                                     "WHERE c.docteur.id = :docteurId " +
                                     "ORDER BY c.date, c.heure",
@@ -238,7 +239,8 @@ public class ConsultationRepositoryImpl implements IConsultationRepository {
             return em.createQuery(
                             "SELECT DISTINCT c FROM Consultation c " +
                                     "LEFT JOIN FETCH c.patient " +
-                                    "LEFT JOIN FETCH c.docteur " +
+                                    "LEFT JOIN FETCH c.docteur d " +
+                                    "LEFT JOIN FETCH d.departement " +
                                     "LEFT JOIN FETCH c.salle " +
                                     "WHERE c.docteur.id = :docteurId " +
                                     "AND c.date >= :today " +
