@@ -91,7 +91,6 @@ public class RefuserReservationServlet extends HttpServlet {
 
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Erreur lors du refus", e);
-            session.setAttribute("errorMessage", "❌ Une erreur est survenue lors du refus");
             response.sendRedirect(request.getContextPath() + "/docteur/dashboard");
         }
     }

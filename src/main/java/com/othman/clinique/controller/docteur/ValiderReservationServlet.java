@@ -75,7 +75,7 @@ public class ValiderReservationServlet extends HttpServlet {
 
         } catch (NumberFormatException e) {
             LOGGER.log(Level.WARNING, "ID consultation invalide", e);
-            session.setAttribute("errorMessage", "❌ ID de consultation invalide");
+            session.setAttribute("errorMessage", "ID de consultation invalide");
             response.sendRedirect(request.getContextPath() + "/docteur/dashboard");
 
         } catch (ValidationException | EntityNotFoundException e) {
@@ -85,7 +85,6 @@ public class ValiderReservationServlet extends HttpServlet {
 
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Erreur lors de la validation", e);
-            session.setAttribute("errorMessage", "❌ Une erreur est survenue lors de la validation");
             response.sendRedirect(request.getContextPath() + "/docteur/dashboard");
         }
     }
