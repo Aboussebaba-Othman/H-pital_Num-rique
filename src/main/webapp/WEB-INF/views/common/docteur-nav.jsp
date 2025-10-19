@@ -43,6 +43,45 @@
 
             <!-- Profil et Déconnexion -->
             <div class="flex items-center space-x-4">
+                <!-- Notifications -->
+                <div class="relative">
+                    <button id="notificationBtn"
+                            class="relative p-2 text-white hover:bg-white/20 rounded-lg transition-all duration-200"
+                            onclick="toggleNotifications()">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span id="notificationBadge"
+                              class="hidden absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold animate-pulse">
+                            0
+                        </span>
+                    </button>
+
+                    <!-- Dropdown Notifications -->
+                    <div id="notificationDropdown"
+                         class="hidden absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-2xl z-50 border border-gray-200 overflow-hidden">
+                        <div class="bg-gradient-to-r from-green-600 to-emerald-600 p-4">
+                            <h3 class="text-white font-bold text-lg flex items-center justify-between">
+                                <span>
+                                    <i class="fas fa-bell mr-2"></i>
+                                    Notifications
+                                </span>
+                                <span id="notificationCount" class="text-sm bg-white/20 px-2 py-1 rounded-full">0</span>
+                            </h3>
+                        </div>
+                        <div id="notificationList" class="max-h-96 overflow-y-auto">
+                            <!-- Notifications chargées dynamiquement -->
+                            <div class="flex items-center justify-center p-8">
+                                <i class="fas fa-spinner fa-spin text-green-600 text-2xl"></i>
+                            </div>
+                        </div>
+                        <div class="border-t border-gray-200 p-3 bg-gray-50">
+                            <a href="${pageContext.request.contextPath}/docteur/consultations"
+                               class="text-sm text-green-600 hover:text-green-800 font-semibold block text-center">
+                                Voir toutes les consultations →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="hidden md:block text-white">
                     <div class="flex items-center">
                         <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3">
